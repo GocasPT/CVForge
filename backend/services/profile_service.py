@@ -46,7 +46,7 @@ class ProfileService:
 
         try:
             with open(self.profile_path, 'w', encoding='utf-8') as f:
-                json.dump(profile.model_dump_json(), f, ensure_ascii=False, indent=4)
+                json.dump(profile.model_dump(), f, ensure_ascii=False, indent=4)
 
             return True
 
