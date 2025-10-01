@@ -6,17 +6,8 @@ from typing import Optional, Dict, Any
 from pydantic import BaseModel, ValidationError
 
 
-class PersonalData(BaseModel):
-    full_name: Optional[str]
-    email: Optional[str]
-    phone: Optional[str]
-    location: Optional[str]
-    headline: Optional[str]
-    summary: Optional[str]
-    links: Optional[str]
-
 class ProfileData(BaseModel):
-    personal: PersonalData
+    personal: Dict[str, Any]
     professional: Optional[Dict[str, Any]] = None
     skills: Optional[Dict[str, Any]] = None
     preferences: Optional[Dict[str, Any]] = None
@@ -36,21 +27,22 @@ class ProfileService:
 
             return ProfileData(**data)
 
-        except (json.JSONDecodeError, ValidationError, FileNotFoundError) as e:
+        except (json.JSONDecodeError, ValidationError, FileNotFoundError, PermissionError, OSError) as e:
             print(f"Error loading profile: {e}")
             return None
 
     def save_profile(self, profile: ProfileData) -> bool:
-        if not self.profile_path.exists():
+        try:
             self.profile_path.parent.mkdir(parents=True, exist_ok=True)
 
-        try:
+            profile_dict = profile.model_dump()
+
             with open(self.profile_path, 'w', encoding='utf-8') as f:
-                json.dump(profile.model_dump(), f, ensure_ascii=False, indent=4)
+                json.dump(profile_dict, f, ensure_ascii=False, indent=4)
 
             return True
 
-        except (json.JSONDecodeError, ValidationError, FileNotFoundError) as e:
+        except (json.JSONDecodeError, ValidationError, FileNotFoundError, PermissionError, OSError, Exception) as e:
             print(f"Error saving profile: {e}")
             return False
 
@@ -67,10 +59,10 @@ class ProfileService:
                 return False, "Could not load profile"
 
             # Basic validation checks
-            if not profile.personal.full_name:
+            if not profile.personal.get('full_name'):
                 return False, "Missing full_name in personal section"
 
-            if not profile.personal.email:
+            if not profile.personal.get('email'):
                 return False, "Missing email in personal section"
 
             return True, None
@@ -97,7 +89,7 @@ class ProfileService:
         return {
             "exists": True,
             "path": str(self.profile_path),
-            "full_name": profile.personal.full_name if profile.personal.full_name else 'Unknown',
-            "email": profile.personal.email if profile.personal.email else 'Unknown',
+            "full_name": profile.personal.get('full_name', 'Unknown'),
+            "email": profile.personal.get('email', 'Unknown'),
             "skills_categories": len(profile.skills) if profile.skills else 0
         }
