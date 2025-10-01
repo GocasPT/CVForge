@@ -1,0 +1,19 @@
+{
+  "personal": {
+    "full_name": "John Doe",
+    "email": "john.doe@example.com",
+    "phone": "+1 (555) 123-4567",
+    "location": "New York, NY, USA",
+    "headline": "Senior Software Engineer",
+    "summary": "A passionate software engineer with...",
+    "links": {
+      "linkedin": "https://linkedin.com/in/johndoe",
+      "github": "https://github.com/johndoe",
+      "website": "https://johndoe.dev"
+    }
+  },
+  "professional": {},
+  "skills": {},
+  "preferences": {},
+  "metadata": {}
+}

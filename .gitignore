@@ -1543,3 +1543,4 @@ tags
 [._]*.un~
 
 /.idea/
+/config/*.json
