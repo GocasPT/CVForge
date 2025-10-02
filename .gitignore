@@ -1544,3 +1544,4 @@ tags
 
 /.idea/
 /config/*.json
+*.db
