@@ -6,7 +6,7 @@ from sqlalchemy import create_engine, text
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.exc import OperationalError, IntegrityError
 
-from backend.config.database import Base, SessionLocal, engine
+from backend.config import Base, SessionLocal, engine
 
 class TestDatabaseConnection:
     def test_database_url_from_environment(self, monkeypatch):

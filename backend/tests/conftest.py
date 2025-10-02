@@ -2,7 +2,7 @@ import pytest
 import tempfile
 from pathlib import Path
 from typing import Generator
-from backend.config.database import Base, SessionLocal, engine
+from backend.config import Base, SessionLocal, engine
 
 @pytest.fixture
 def db_session():

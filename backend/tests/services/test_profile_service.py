@@ -4,7 +4,7 @@ import tempfile
 
 from pathlib import Path
 from unittest.mock import mock_open, patch
-from backend.services.profile_service import ProfileService, ProfileData
+from backend.services import ProfileService, ProfileData
 
 
 class TestProfileData:
