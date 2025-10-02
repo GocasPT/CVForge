@@ -11,7 +11,14 @@ class ProjectMatcher(object):
         session = SessionLocal()
         try:
             projects = session.query(Project).all()
-            return [{"id": p.id, "title": p.title, "description": p.description, "technologies": p.technologies} for p in projects]
+            return [
+                {
+                    "id": p.id,
+                    "title": p.title,
+                    "description": p.description,
+                    "technologies": p.technologies
+                } for p in projects
+            ]
 
         finally:
             session.close()

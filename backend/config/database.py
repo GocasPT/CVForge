@@ -8,7 +8,10 @@ MAX_PATH_LENGTH = 500
 # Database path
 DATABASE_URL = os.environ.get('DATABASE_URL')
 if not DATABASE_URL:
-    raise ValueError("DATABASE_URL environment variable is not set")
+    raise ValueError(
+        "DATABASE_URL environment variable is not set. "
+        "Please set it to a valid database connection string."
+    )
 
 # Make SQLite engine
 engine = create_engine(

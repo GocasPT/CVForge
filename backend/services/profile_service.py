@@ -22,7 +22,7 @@ class ProfileService:
 
     def load_profile(self) -> Optional[ProfileData]:
         if not self.profile_path.exists():
-            logger.warning("Profile not found at %s" % self.profile_path)
+            logger.warning("Profile not found at %s", self.profile_path)
             return None
 
         try:
