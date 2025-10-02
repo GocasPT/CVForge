@@ -5,7 +5,7 @@ from pathlib import Path
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.exc import OperationalError, IntegrityError
-from backend.config import Base
+from config import Base
 
 class TestDatabaseConnection:
     def test_database_url_from_environment(self, monkeypatch, temp_db):
@@ -30,7 +30,6 @@ class TestDatabaseConnection:
             invalid_engine = create_engine("invalid://url")
             with invalid_engine.connect():
                 pass
-
 
 class TestSessionManagement:
     def test_session_creation(self, temp_db):
@@ -73,7 +72,6 @@ class TestSessionManagement:
         finally:
             session.close()
 
-
 class TestTableCreation:
     def test_base_metadata_exists(self):
         assert hasattr(Base, 'metadata')
@@ -112,7 +110,6 @@ class TestTableCreation:
             except (PermissionError, FileNotFoundError):
                 pass
 
-
 class TestThreadSafety:
     def test_concurrent_sessions(self, temp_db):
         import threading
@@ -132,7 +129,6 @@ class TestThreadSafety:
         assert len(sessions) == 5
         for session in sessions:
             session.close()
-
 
 class TestErrorHandling:
     def test_invalid_sql_query(self, db_session):
@@ -154,7 +150,6 @@ class TestErrorHandling:
         session = TestSessionLocal()
         session.close()
         session.close()  # Should not raise error
-
 
 class TestDatabasePersistence:
     def test_data_persists_across_sessions(self, temp_db):
@@ -194,7 +189,6 @@ class TestDatabasePersistence:
 
         assert count == 0, "Uncommitted data should have been rolled back"
 
-
 class TestDatabaseConstraints:
     def test_primary_key_constraint(self, temp_db):
         engine, TestSessionLocal, _ = temp_db
@@ -214,7 +208,6 @@ class TestDatabaseConstraints:
             session.commit()
 
         session.close()
-
 
 class TestDatabaseConfiguration:
     def test_database_encoding(self, temp_db):

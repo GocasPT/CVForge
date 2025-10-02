@@ -2,13 +2,14 @@ import pytest
 import tempfile
 import os
 from pathlib import Path
-from typing import Generator
-from sqlalchemy import create_engine
+from typing import Generator, Tuple
+from sqlalchemy import create_engine, Engine
 from sqlalchemy.orm import sessionmaker, Session
-from backend.config import Base
+from config import init_db
+from services import ProfileService
 
 @pytest.fixture
-def temp_db() -> Generator[tuple, None, None]:
+def temp_db() -> Generator[Tuple[Engine, sessionmaker, str], None, None]:
     with tempfile.NamedTemporaryFile(suffix='.db', delete=False) as tmp_file:
         db_path = tmp_file.name
 
@@ -17,7 +18,7 @@ def temp_db() -> Generator[tuple, None, None]:
     TestSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=test_engine)
 
     # Create all tables
-    Base.metadata.create_all(bind=test_engine)
+    init_db()
 
     try:
         yield test_engine, TestSessionLocal, db_path
@@ -28,7 +29,6 @@ def temp_db() -> Generator[tuple, None, None]:
             os.unlink(db_path)
         except (PermissionError, FileNotFoundError):
             pass
-
 
 @pytest.fixture
 def db_session(temp_db) -> Generator[Session, None, None]:
@@ -41,31 +41,25 @@ def db_session(temp_db) -> Generator[Session, None, None]:
         session.rollback()
         session.close()
 
-
 @pytest.fixture
 def clean_database(temp_db):
     engine, TestSessionLocal, _ = temp_db
     yield engine, TestSessionLocal
-
 
 @pytest.fixture
 def temp_dir() -> Generator[Path, None, None]:
     with tempfile.TemporaryDirectory() as tmp_dir:
         yield Path(tmp_dir)
 
-
 @pytest.fixture
 def temp_profile_dir() -> Generator[Path, None, None]:
     with tempfile.TemporaryDirectory() as tmp_dir:
         yield Path(tmp_dir)
 
-
 @pytest.fixture
 def profile_service(temp_profile_dir):
-    from backend.services.profile_service import ProfileService
     profile_path = temp_profile_dir / "profile.json"
     return ProfileService(profile_path=str(profile_path))
-
 
 @pytest.fixture
 def sample_profile_data() -> dict:

@@ -1,10 +1,12 @@
 import json
-
+import logging
+import tempfile
+import shutil
 from pathlib import Path
 from typing import Optional, Dict, Any
-
 from pydantic import BaseModel, ValidationError
 
+logger = logging.getLogger(__name__)
 
 class ProfileData(BaseModel):
     personal: Dict[str, Any]
@@ -19,31 +21,51 @@ class ProfileService:
 
     def load_profile(self) -> Optional[ProfileData]:
         if not self.profile_path.exists():
+            logger.warning("Profile not found at %s" % self.profile_path)
             return None
 
         try:
             with open(self.profile_path, 'r', encoding='utf-8') as f:
                 data = json.load(f)
-
             return ProfileData(**data)
 
-        except (json.JSONDecodeError, ValidationError, FileNotFoundError, PermissionError, OSError) as e:
-            print(f"Error loading profile: {e}")
+        except json.JSONDecodeError as e:
+            logger.error("Invalid JSON in profile file: %s" % e)
+            return None
+
+        except ValidationError as e:
+            logger.error("Profile validation failed: %s" % e)
+            return None
+
+        except PermissionError as e:
+            logger.error("Permission denied reading profile: %s" % e)
+            return None
+
+        except Exception as e:
+            logger.exception("Unexpected error loading profile: %s" % e)
             return None
 
     def save_profile(self, profile: ProfileData) -> bool:
         try:
             self.profile_path.parent.mkdir(parents=True, exist_ok=True)
 
-            profile_dict = profile.model_dump()
+            # Write to temporary file first
+            with tempfile.NamedTemporaryFile(
+                    mode='w',
+                    delete=False,
+                    dir=self.profile_path.parent,
+                    encoding='utf-8'
+            ) as tmp_file:
+                json.dump(profile.model_dump(), tmp_file,
+                          ensure_ascii=False, indent=4)
+                tmp_path = tmp_file.name
 
-            with open(self.profile_path, 'w', encoding='utf-8') as f:
-                json.dump(profile_dict, f, ensure_ascii=False, indent=4)
-
+            # Atomic rename
+            shutil.move(tmp_path, self.profile_path)
             return True
 
-        except (json.JSONDecodeError, ValidationError, FileNotFoundError, PermissionError, OSError, Exception) as e:
-            print(f"Error saving profile: {e}")
+        except Exception as e:
+            logger.error("Error saving profile: %s" % e)
             return False
 
     def profile_exists(self) -> bool:

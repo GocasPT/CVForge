@@ -1,11 +1,9 @@
 import pytest
 import json
 import tempfile
-
 from pathlib import Path
 from unittest.mock import mock_open, patch
-from backend.services import ProfileService, ProfileData
-
+from services import ProfileService, ProfileData
 
 class TestProfileData:
     def test_profile_data_creation_valid(self):
@@ -36,40 +34,7 @@ class TestProfileData:
         with pytest.raises(ValueError):
             ProfileData(personal=None)
 
-
 class TestProfileService:
-    @pytest.fixture
-    def temp_profile_dir(self):
-        with tempfile.TemporaryDirectory() as tmp_dir:
-            yield Path(tmp_dir)
-
-    @pytest.fixture
-    def sample_profile_data(self):
-        return {
-            "personal": {
-                "full_name": "Test User",
-                "email": "test@example.com",
-                "phone": "+1-555-0123"
-            },
-            "professional": {
-                "experience": "5 years",
-                "current_role": "Developer"
-            },
-            "skills": {
-                "programming": ["Python", "JavaScript"],
-                "tools": ["Docker", "Git"]
-            },
-            "preferences": {
-                "language": "en",
-                "timezone": "UTC"
-            }
-        }
-
-    @pytest.fixture
-    def profile_service(self, temp_profile_dir):
-        profile_path = temp_profile_dir / "profile.json"
-        return ProfileService(profile_path=str(profile_path))
-
     def test_profile_exists_false_when_missing(self, profile_service):
         assert not profile_service.profile_exists()
 
@@ -188,7 +153,6 @@ class TestProfileService:
         summary = profile_service.get_profile_summary()
         assert summary["skills_categories"] == 0
 
-
 class TestProfileServiceEdgeCases:
     def test_load_profile_invalid_json(self, temp_profile_dir):
         profile_path = temp_profile_dir / "profile.json"
@@ -209,8 +173,8 @@ class TestProfileServiceEdgeCases:
         profile = profile_service.load_profile()
         assert profile is None
 
-    @patch('builtins.open', side_effect=PermissionError("No permission"))
-    def test_save_profile_permission_error(self, mock_file, profile_service):
+    @patch('tempfile.NamedTemporaryFile', side_effect=PermissionError("No permission"))
+    def test_save_profile_permission_error(self, mock_tempfile, profile_service):
         profile_data = ProfileData(
             personal={"full_name": "Test", "email": "test@example.com"}
         )
@@ -236,7 +200,6 @@ class TestProfileServiceEdgeCases:
 
             result = profile_service.save_profile(profile_data)
             assert not result
-
 
 class TestProfileServiceIntegration:
     def test_complete_profile_lifecycle(self, temp_profile_dir):
