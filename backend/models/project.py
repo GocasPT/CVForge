@@ -2,7 +2,6 @@ from sqlalchemy import Column, String, Integer, Text, DateTime, func
 from sqlalchemy.dialects.sqlite import JSON
 from config import Base, MAX_NAME_LENGTH
 
-
 class Project(Base):
     __tablename__ = 'projects'
 

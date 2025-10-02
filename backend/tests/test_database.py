@@ -1,11 +1,14 @@
-import pytest
 import os
 import tempfile
 from pathlib import Path
+
+import pytest
 from sqlalchemy import create_engine, text
-from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.exc import OperationalError, IntegrityError
+from sqlalchemy.orm import Session
+
 from config import Base
+
 
 class TestDatabaseConnection:
     def test_database_url_from_environment(self, monkeypatch, temp_db):

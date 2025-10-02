@@ -1,12 +1,15 @@
-import pytest
-import tempfile
 import os
+import tempfile
 from pathlib import Path
 from typing import Generator, Tuple
+
+import pytest
 from sqlalchemy import create_engine, Engine
 from sqlalchemy.orm import sessionmaker, Session
+
 from config import init_db
 from services import ProfileService
+
 
 @pytest.fixture
 def temp_db() -> Generator[Tuple[Engine, sessionmaker, str], None, None]:

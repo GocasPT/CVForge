@@ -1,5 +1,5 @@
-import numpy as np
 import faiss
+import numpy as np
 from sentence_transformers import SentenceTransformer
 
 class EmbeddingService(object):
@@ -14,7 +14,7 @@ class EmbeddingService(object):
         return self.model.encode(texts)
 
     def build_index(self, projects: list[dict]) -> faiss.IndexFlatIP:
-        texts = [p["description"] for p in projects]
+        texts = [f"[{", ".join(p["technologies"])}] {p["description"]}" for p in projects]
         embeddings = self.encode_batch(texts)
 
         # Normalizar embeddings para similaridade coseno

@@ -2,7 +2,9 @@ from sqlalchemy import Column, Integer, Text, String, DateTime, ForeignKey, func
 from sqlalchemy.dialects.sqlite import JSON
 from sqlalchemy.orm import relationship
 from sqlalchemy.types import FLOAT
+
 from config import Base, MAX_PATH_LENGTH
+
 
 class GeneratedCV(Base):
     __tablename__ = 'generated_cv'

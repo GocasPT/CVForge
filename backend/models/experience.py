@@ -1,7 +1,9 @@
 from sqlalchemy import Column, Integer, String, DateTime, Text, func
 from sqlalchemy.dialects.sqlite import JSON
 from sqlalchemy.sql.sqltypes import Date
+
 from config import Base, MAX_NAME_LENGTH
+
 
 class Experience(Base):
     __tablename__ = 'experiences'
