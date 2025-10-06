@@ -7,10 +7,10 @@ from config import Base, MAX_PATH_LENGTH
 
 
 class GeneratedCV(Base):
-    __tablename__ = 'generated_cv'
+    __tablename__ = "generated_cv"
 
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
-    template_id = Column(Integer, ForeignKey('cv_templates.id'), nullable=False, index=True)
+    template_id = Column(Integer, ForeignKey("cv_templates.id"), nullable=False, index=True)
     job_description = Column(Text, nullable=False)
     selected_projects = Column(JSON, nullable=True)
     selected_experiences = Column(JSON, nullable=True)

@@ -1,7 +1,9 @@
+from unittest.mock import Mock, patch
+
 import pytest
-from unittest.mock import Mock, patch, MagicMock
-from services import ProjectMatcher
+
 from models import Project
+from services import ProjectMatcherService
 
 
 class TestProjectMatcher:
@@ -10,7 +12,7 @@ class TestProjectMatcher:
     def test_project_matcher_initialization(self):
         """Test that ProjectMatcher initializes correctly."""
         with patch('services.project_matcher.EmbeddingService') as mock_embedding:
-            matcher = ProjectMatcher()
+            matcher = ProjectMatcherService()
 
             # Should initialize with multilingual model
             mock_embedding.assert_called_once_with('paraphrase-multilingual-MiniLM-L12-v2')
@@ -28,7 +30,7 @@ class TestProjectMatcher:
             mock_session_local.return_value = mock_session
             mock_session.query.return_value.all.return_value = sample_db_projects
 
-            matcher = ProjectMatcher()
+            matcher = ProjectMatcherService()
             projects = matcher._get_all_projects()
 
             # Verify database query was made
@@ -45,7 +47,7 @@ class TestProjectMatcher:
             mock_session_local.return_value = mock_session
             mock_session.query.return_value.all.return_value = sample_db_projects
 
-            matcher = ProjectMatcher()
+            matcher = ProjectMatcherService()
             projects = matcher._get_all_projects()
 
             # Check format of returned projects
@@ -66,7 +68,7 @@ class TestProjectMatcher:
             mock_session_local.return_value = mock_session
             mock_session.query.return_value.all.return_value = sample_db_projects
 
-            matcher = ProjectMatcher()
+            matcher = ProjectMatcherService()
             matcher._get_all_projects()
 
             # Session should be closed even if no exception
@@ -79,7 +81,7 @@ class TestProjectMatcher:
             mock_session_local.return_value = mock_session
             mock_session.query.side_effect = Exception("Database error")
 
-            matcher = ProjectMatcher()
+            matcher = ProjectMatcherService()
 
             with pytest.raises(Exception):
                 matcher._get_all_projects()
@@ -110,7 +112,7 @@ class TestProjectMatcher:
                 {"rank": 2, "score": 0.72, "project": {"id": 2, "title": "ML Pipeline"}}
             ]
 
-            matcher = ProjectMatcher()
+            matcher = ProjectMatcherService()
             results = matcher.match_projects("Python FastAPI backend development", top_n=2)
 
             # Verify results
@@ -130,7 +132,7 @@ class TestProjectMatcher:
             mock_embedding_cls.return_value = mock_embedding
             mock_embedding.build_index.return_value = Mock()
 
-            matcher = ProjectMatcher()
+            matcher = ProjectMatcherService()
 
             for top_n in [1, 3, 5, 10]:
                 mock_embedding.search.return_value = [
@@ -159,7 +161,7 @@ class TestProjectMatcher:
             mock_embedding_cls.return_value = mock_embedding
             mock_embedding.search.return_value = []
 
-            matcher = ProjectMatcher()
+            matcher = ProjectMatcherService()
             matcher.match_projects("test query")
 
             # Verify build_index was called with project data
@@ -179,7 +181,7 @@ class TestProjectMatcher:
             mock_session_local.return_value = mock_session
             mock_session.query.return_value.all.return_value = []
 
-            matcher = ProjectMatcher()
+            matcher = ProjectMatcherService()
             results = matcher.match_projects("test query", top_n=5)
 
             # Should return empty list when no projects
@@ -200,7 +202,7 @@ class TestProjectMatcher:
             mock_embedding.build_index.return_value = Mock()
             mock_embedding.search.return_value = None
 
-            matcher = ProjectMatcher()
+            matcher = ProjectMatcherService()
             results = matcher.match_projects("test query")
 
             # Should handle None gracefully
@@ -213,7 +215,7 @@ class TestProjectMatcher:
             mock_session_local.return_value = mock_session
             mock_session.query.side_effect = Exception("Database connection failed")
 
-            matcher = ProjectMatcher()
+            matcher = ProjectMatcherService()
 
             with pytest.raises(Exception) as exc_info:
                 matcher.match_projects("test query")
@@ -232,7 +234,7 @@ class TestProjectMatcher:
             mock_embedding_cls.return_value = mock_embedding
             mock_embedding.build_index.side_effect = Exception("Embedding failed")
 
-            matcher = ProjectMatcher()
+            matcher = ProjectMatcherService()
 
             with pytest.raises(Exception) as exc_info:
                 matcher.match_projects("test query")
@@ -252,7 +254,7 @@ class TestProjectMatcher:
             mock_embedding.build_index.return_value = Mock()
             mock_embedding.search.return_value = []
 
-            matcher = ProjectMatcher()
+            matcher = ProjectMatcherService()
             results = matcher.match_projects("", top_n=5)
 
             # Should still attempt to search
@@ -274,7 +276,7 @@ class TestProjectMatcher:
 
             long_description = "Python developer " * 10000  # Very long text
 
-            matcher = ProjectMatcher()
+            matcher = ProjectMatcherService()
             results = matcher.match_projects(long_description, top_n=5)
 
             # Should handle without crashing
@@ -295,7 +297,7 @@ class TestProjectMatcher:
 
             special_description = "Python & C++ dev with @decorators! 🚀 #backend"
 
-            matcher = ProjectMatcher()
+            matcher = ProjectMatcherService()
             results = matcher.match_projects(special_description, top_n=5)
 
             # Should handle special characters
@@ -342,7 +344,7 @@ class TestProjectMatcher:
             mock_embedding.search.return_value = expected_results
 
             # Execute workflow
-            matcher = ProjectMatcher()
+            matcher = ProjectMatcherService()
             job_description = "Looking for Python backend developer with FastAPI experience"
             results = matcher.match_projects(job_description, top_n=2)
 
@@ -370,7 +372,7 @@ class TestProjectMatcher:
             mock_embedding.build_index.return_value = Mock()
             mock_embedding.search.return_value = []
 
-            matcher = ProjectMatcher()
+            matcher = ProjectMatcherService()
 
             # Perform multiple matches
             queries = [
@@ -403,7 +405,7 @@ class TestProjectMatcher:
 
             unicode_description = "寻找Python开发人员 with FastAPI 经验"
 
-            matcher = ProjectMatcher()
+            matcher = ProjectMatcherService()
             results = matcher.match_projects(unicode_description, top_n=5)
 
             # Should handle unicode
@@ -423,7 +425,7 @@ class TestProjectMatcher:
             mock_embedding.build_index.return_value = mock_index
             mock_embedding.search.return_value = []
 
-            matcher = ProjectMatcher()
+            matcher = ProjectMatcherService()
             results = matcher.match_projects("test query", top_n=0)
 
             # Use the actual index mock that was created
@@ -443,7 +445,7 @@ class TestProjectMatcher:
             mock_embedding_cls.return_value = mock_embedding
             mock_embedding.build_index.return_value = Mock()
 
-            matcher = ProjectMatcher()
+            matcher = ProjectMatcherService()
 
             # May raise error or handle gracefully depending on implementation
             # At minimum, should not crash the application
@@ -467,7 +469,7 @@ class TestProjectMatcher:
             mock_embedding.build_index.return_value = mock_index
             mock_embedding.search.return_value = []
 
-            matcher = ProjectMatcher()
+            matcher = ProjectMatcherService()
             matcher.match_projects("test query")  # No top_n specified
 
             # Use the actual index mock that was created
@@ -502,7 +504,7 @@ class TestProjectMatcher:
             import time
             start = time.time()
 
-            matcher = ProjectMatcher()
+            matcher = ProjectMatcherService()
             matcher.match_projects("Python developer", top_n=10)
 
             elapsed = time.time() - start
@@ -533,7 +535,7 @@ class TestProjectMatcher:
             mock_embedding = Mock()
             mock_embedding_cls.return_value = mock_embedding
 
-            matcher = ProjectMatcher()
+            matcher = ProjectMatcherService()
 
             # Should handle gracefully or raise appropriate error
             try:
@@ -563,7 +565,7 @@ class TestProjectMatcher:
             mock_embedding = Mock()
             mock_embedding_cls.return_value = mock_embedding
 
-            matcher = ProjectMatcher()
+            matcher = ProjectMatcherService()
 
             # Should handle None values gracefully
             try:

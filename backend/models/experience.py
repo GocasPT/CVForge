@@ -6,7 +6,7 @@ from config import Base, MAX_NAME_LENGTH
 
 
 class Experience(Base):
-    __tablename__ = 'experiences'
+    __tablename__ = "experiences"
 
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     position = Column(String(MAX_NAME_LENGTH), nullable=False)

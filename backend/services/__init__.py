@@ -1,14 +1,14 @@
 from .embedding_service import EmbeddingService
-from .profile_service import ProfileData, ProfileService
-from .project_matcher import ProjectMatcher
 from .latex_service import LaTeXService
-from .pdf_generator import PDFGenerator
+from .pdf_generator import PDFGeneratorService
+from .profile_service import ProfileData, ProfileService
+from .project_matcher import ProjectMatcherService
 
 __all__ = [
-    'ProfileData',
-    'ProfileService',
-    'EmbeddingService',
-    'ProjectMatcher',
-    'LaTeXService',
-    'PDFGenerator',
+    "ProfileData",
+    "ProfileService",
+    "EmbeddingService",
+    "ProjectMatcherService",
+    "LaTeXService",
+    "PDFGeneratorService",
 ]

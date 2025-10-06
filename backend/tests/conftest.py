@@ -1,12 +1,13 @@
-import pytest
-import tempfile
 import shutil
+import tempfile
 from pathlib import Path
 from unittest.mock import Mock, patch
+
 import numpy as np
+import pytest
 from sqlalchemy.orm import sessionmaker
 
-from services import EmbeddingService, ProjectMatcher, ProfileService
+from services import EmbeddingService, ProjectMatcherService, ProfileService
 
 
 # ==================== PYTEST CONFIGURATION ====================
@@ -77,7 +78,6 @@ def sample_profile_data():
 @pytest.fixture
 def temp_db(temp_db_path):
     """Create a temporary database with schema."""
-    from config.database import engine, SessionLocal, Base, init_db
 
     # Ensure the database URL is set to our temporary path
     import os
@@ -122,6 +122,7 @@ def db_session(temp_db):
         yield session
     finally:
         session.close()
+
 
 # ==============================================================
 
@@ -236,6 +237,7 @@ def embedding_service():
     """Create a fresh EmbeddingService instance for each test."""
     return EmbeddingService(model_name="sentence-transformers/all-MiniLM-L6-v2")
 
+
 @pytest.fixture
 def sample_projects():
     """Sample project data for testing."""
@@ -259,6 +261,7 @@ def sample_projects():
             "technologies": ["React Native", "Node.js", "MongoDB", "AWS"]
         }
     ]
+
 
 @pytest.fixture
 def mock_embedding_model():
@@ -300,6 +303,7 @@ def mock_faiss_index():
 
     return index
 
+
 # ==============================================================================
 
 @pytest.fixture
@@ -307,6 +311,7 @@ def mock_db_session():
     """Mock database session."""
     session = Mock()
     return session
+
 
 @pytest.fixture
 def sample_db_projects():
@@ -333,12 +338,13 @@ def sample_db_projects():
     ]
     return projects
 
+
 @pytest.fixture
 def project_matcher():
     """Create ProjectMatcher instance with mocked dependencies."""
     with patch('services.project_matcher.SessionLocal') as mock_session_local, \
             patch('services.project_matcher.EmbeddingService') as mock_embedding_service:
-        matcher = ProjectMatcher()
+        matcher = ProjectMatcherService()
         matcher.mock_session = mock_session_local
         matcher.mock_embedding = mock_embedding_service
         return matcher

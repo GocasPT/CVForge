@@ -1,15 +1,19 @@
+import os
 from pathlib import Path
-from services import ProfileService, ProjectMatcher, LaTeXService, PDFGenerator
+
+from services import ProfileService, ProjectMatcherService, LaTeXService, PDFGeneratorService
+
 
 def generate_cv(job_description: str, template: str = "basic") -> Path:
     print("=========== A iniciar pipeline ===========")
 
-    profile = ProfileService(Path("backend/config/profile.json")).load_profile()
-    matcher = ProjectMatcher()
-    latex = LaTeXService(Path("backend/templates"), Path("backend/data/generated"))
-    pdf = PDFGenerator(Path("backend/data/generated"))
+    profile = ProfileService(Path(os.environ.get("PROFILE_PATH"))).load_profile()
+    matcher = ProjectMatcherService()
+    latex = LaTeXService(Path("backend/templates"), Path(os.environ.get("GENERATED_DIR")))
+    pdf = PDFGeneratorService(Path(os.environ.get("GENERATED_DIR")))
 
-    print(f"Profile: \n\tname: {profile.personal.get('full_name')}\n\temail: {profile.personal.get('email')}\n\t{profile.personal.get('summary')}")
+    print(
+        f"Profile: \n\tname: {profile.personal.get('full_name')}\n\temail: {profile.personal.get('email')}\n\t{profile.personal.get('summary')}")
 
     projects = matcher.match_projects(job_description)
     print("\nMatching Results:")

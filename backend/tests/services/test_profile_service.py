@@ -35,6 +35,7 @@ class TestProfileData:
         with pytest.raises(ValueError):
             ProfileData(personal=None)
 
+
 class TestProfileService:
     def test_profile_exists_false_when_missing(self, profile_service):
         assert not profile_service.profile_exists()
@@ -154,6 +155,7 @@ class TestProfileService:
         summary = profile_service.get_profile_summary()
         assert summary["skills_categories"] == 0
 
+
 class TestProfileServiceEdgeCases:
     def test_load_profile_invalid_json(self, temp_profile_dir):
         profile_path = temp_profile_dir / "profile.json"
@@ -201,6 +203,7 @@ class TestProfileServiceEdgeCases:
 
             result = profile_service.save_profile(profile_data)
             assert not result
+
 
 class TestProfileServiceIntegration:
     def test_complete_profile_lifecycle(self, temp_profile_dir):

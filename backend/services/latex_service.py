@@ -3,13 +3,14 @@ import os
 from pathlib import Path
 from string import Template
 
+
 class LaTeXService(object):
     def __init__(self, template_dir: Path, output_dir: Path):
         self.template_dir = template_dir
         self.output_dir = output_dir
 
     def get_available_templates(self) -> list:
-        return [f for f in os.listdir(self.template_dir) if f.endswith('.tex')]
+        return [f for f in os.listdir(self.template_dir) if f.endswith(".tex")]
 
     def load_template(self, template_name: str) -> str:
         template_path = Path(self.template_dir) / f"{template_name}.tex"

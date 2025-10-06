@@ -9,12 +9,14 @@ from pydantic import BaseModel, ValidationError
 
 logger = logging.getLogger(__name__)
 
+
 class ProfileData(BaseModel):
     personal: Dict[str, Any]
     professional: Optional[Dict[str, Any]] = None
     skills: Optional[Dict[str, Any]] = None
     preferences: Optional[Dict[str, Any]] = None
     metadata: Optional[Dict[str, Any]] = None
+
 
 class ProfileService:
     def __init__(self, profile_path: Path):
@@ -57,8 +59,7 @@ class ProfileService:
                     dir=self.profile_path.parent,
                     encoding='utf-8'
             ) as tmp_file:
-                json.dump(profile.model_dump(), tmp_file,
-                          ensure_ascii=False, indent=4)
+                json.dump(profile.model_dump(), tmp_file, ensure_ascii=False, indent=4)
                 tmp_path = tmp_file.name
 
             # Atomic rename

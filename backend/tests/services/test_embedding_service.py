@@ -1,7 +1,8 @@
-import pytest
+from unittest.mock import patch
+
 import numpy as np
-import faiss
-from unittest.mock import Mock, patch, MagicMock
+import pytest
+
 from services import EmbeddingService
 
 
