@@ -17,8 +17,8 @@ class ProfileData(BaseModel):
     metadata: Optional[Dict[str, Any]] = None
 
 class ProfileService:
-    def __init__(self, profile_path: str = "config/profile.json"):
-        self.profile_path = Path(profile_path)
+    def __init__(self, profile_path: Path):
+        self.profile_path = profile_path
 
     def load_profile(self) -> Optional[ProfileData]:
         if not self.profile_path.exists():
