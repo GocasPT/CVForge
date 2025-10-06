@@ -1542,6 +1542,7 @@ tags
 # Persistent undo
 [._]*.un~
 
-/.idea/
-/config/*.json
+/.idea/*
+/backend/config/*.json
 *.db
+/backend/data/generated/*
