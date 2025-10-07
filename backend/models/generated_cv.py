@@ -3,7 +3,7 @@ from sqlalchemy.dialects.sqlite import JSON
 from sqlalchemy.orm import relationship
 from sqlalchemy.types import FLOAT
 
-from config import Base, MAX_PATH_LENGTH
+from backend.config import Base, MAX_PATH_LENGTH
 
 
 class GeneratedCV(Base):
@@ -19,4 +19,4 @@ class GeneratedCV(Base):
     generation_time_seconds = Column(FLOAT, nullable=True)
     created_at = Column(DateTime, default=func.now())
 
-    template = relationship("CVTemplate", backref="generated_cvs")
+    template = relationship("CVTemplate", back_populates="generated_cvs")

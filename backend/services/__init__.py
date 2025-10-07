@@ -1,8 +1,8 @@
-from .embedding_service import EmbeddingService
-from .latex_service import LaTeXService
-from .pdf_generator import PDFGeneratorService
-from .profile_service import ProfileData, ProfileService
-from .project_matcher import ProjectMatcherService
+from backend.services.embedding_service import EmbeddingService
+from backend.services.latex_service import LaTeXService
+from backend.services.pdf_generator import PDFGeneratorService
+from backend.services.profile_service import ProfileData, ProfileService
+from backend.services.project_matcher import ProjectMatcherService
 
 __all__ = [
     "ProfileData",

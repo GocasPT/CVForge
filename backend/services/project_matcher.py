@@ -1,9 +1,9 @@
 import os
 from typing import List
 
-from config import SessionLocal
-from models import Project
-from services import EmbeddingService
+from backend.config import SessionLocal
+from backend.models import Project
+from backend.services import EmbeddingService
 
 
 class ProjectMatcherService(object):

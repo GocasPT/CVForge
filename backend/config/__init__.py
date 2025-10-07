@@ -1,4 +1,4 @@
-from .database import engine, SessionLocal, Base, init_db, delete_db, MAX_NAME_LENGTH, MAX_PATH_LENGTH
+from backend.config.database import engine, SessionLocal, Base, init_db, delete_db, reset_db, MAX_NAME_LENGTH, MAX_PATH_LENGTH
 
 __all__ = [
     "engine",
@@ -6,6 +6,7 @@ __all__ = [
     "Base",
     "init_db",
     "delete_db",
+    "reset_db",
     "MAX_NAME_LENGTH",
     "MAX_PATH_LENGTH",
 ]

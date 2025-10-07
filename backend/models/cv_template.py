@@ -1,6 +1,7 @@
 from sqlalchemy import Column, Integer, String, Text, Boolean, DateTime, func
+from sqlalchemy.orm import relationship
 
-from config import Base, MAX_NAME_LENGTH, MAX_PATH_LENGTH
+from backend.config import Base, MAX_NAME_LENGTH, MAX_PATH_LENGTH
 
 
 class CVTemplate(Base):
@@ -13,3 +14,5 @@ class CVTemplate(Base):
     preview_image = Column(String(MAX_PATH_LENGTH), nullable=True)
     is_active = Column(Boolean, nullable=False)
     created_at = Column(DateTime, default=func.now())
+
+    generated_cvs = relationship("GeneratedCV", back_populates="template")

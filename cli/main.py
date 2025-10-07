@@ -1,5 +1,6 @@
 import click
-from commands.profile import profile
+
+from cli.commands import profile, project, experience
 
 @click.group()
 def cvforge():

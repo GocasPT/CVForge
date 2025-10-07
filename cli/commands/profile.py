@@ -2,7 +2,7 @@ import os
 
 import click
 from pathlib import Path
-from backend.services.profile_service import ProfileService
+from backend.services import ProfileService
 
 service = ProfileService(Path(os.environ.get("PROFILE_PATH")))
 
