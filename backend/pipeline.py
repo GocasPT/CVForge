@@ -1,10 +1,11 @@
 import os
 from pathlib import Path
+from typing import Any
 
 from services import ProfileService, ProjectMatcherService, LaTeXService, PDFGeneratorService
 
 
-def generate_cv(job_description: str, template: str = "basic") -> Path:
+def generate_cv(job_description: str, template: str = "basic") -> tuple[Path, list[tuple[Any, Any]]]:
     print("=========== A iniciar pipeline ===========")
 
     profile = ProfileService(Path(os.environ.get("PROFILE_PATH"))).load_profile()
@@ -15,12 +16,12 @@ def generate_cv(job_description: str, template: str = "basic") -> Path:
     print(
         f"Profile: \n\tname: {profile.personal.get('full_name')}\n\temail: {profile.personal.get('email')}\n\t{profile.personal.get('summary')}")
 
-    projects = matcher.match_projects(job_description)
+    matches = matcher.match_projects(job_description)
     print("\nMatching Results:")
-    for r in projects:
-        print(f"\tRank {r['rank']} | Score {r['score']:.3f} | Projeto: {r['project']['title']}")
+    for m in matches:
+        print(f"\tRank {m['rank']} | Score {m['score']:.3f} | Projeto: {m['project']['title']}")
 
-    projects = [p['project'] for p in projects]
+    projects = [p['project'] for p in matches]
     formatted = ""
     for p in projects:
         formatted += f"\\textbf{{{p['title']}}} \\\\ {p['description']} \\\\[1em]\n"
@@ -37,6 +38,7 @@ def generate_cv(job_description: str, template: str = "basic") -> Path:
     pdf_path = pdf.generate(tex_path)
     print("✅ PDF gerado com sucesso!")
 
+    selected_projects = [(m["project"], m["score"]) for m in matches]
     print("=========== A finalizar pipeline ===========")
 
-    return pdf_path
+    return pdf_path, selected_projects
