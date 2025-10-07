@@ -8,6 +8,8 @@ def cvforge():
 
 # Subcomandos
 cvforge.add_command(profile)
+cvforge.add_command(project)
+cvforge.add_command(experience)
 
 if __name__ == "__main__":
     cvforge()
