@@ -5,14 +5,16 @@ from pdflatex import PDFLaTeX
 
 class PDFGeneratorService(object):
     def __init__(self, output_dir: Path):
-        self.output_dir = output_dir
+        self.output_dir = Path(output_dir).absolute()
 
     def generate(self, tex_path: Path) -> Path:
         return self._compile_pdf(tex_path)
 
     def _compile_pdf(self, tex_path: Path):
-        pdf_latex = PDFLaTeX.from_texfile(tex_path)
-        pdf_latex.set_output_directory(self.output_dir)
+        tex_path_abs = Path(tex_path).absolute()
+
+        pdf_latex = PDFLaTeX.from_texfile(str(tex_path_abs))
+        pdf_latex.set_output_directory(str(self.output_dir))
         pdf, log, completed_process = pdf_latex.create_pdf(keep_pdf_file=True)
 
         if completed_process.returncode != 0:

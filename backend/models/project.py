@@ -16,3 +16,16 @@ class Project(Base):
     role = Column(String(MAX_NAME_LENGTH), nullable=True)
     created_at = Column(DateTime, default=func.now())
     updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
+
+    def as_dict(self):
+        return {
+            "id": self.id,
+            "title": self.title,
+            "description": self.description,
+            "technologies": self.technologies,
+            "achievements": self.achievements,
+            "duration": self.duration,
+            "role": self.role,
+            "created_at": self.created_at,
+            "updated_at": self.updated_at,
+        }

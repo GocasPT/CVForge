@@ -98,7 +98,7 @@ class ProfileService:
         if not self.profile_exists():
             return {
                 "exists": False,
-                "path": str(self.profile_path),
+                # "path": str(self.profile_path),
                 "error": "Profile file not found"
             }
 
@@ -106,13 +106,13 @@ class ProfileService:
         if profile is None:
             return {
                 "exists": True,
-                "path": str(self.profile_path),
+                # "path": str(self.profile_path),
                 "error": "Could not load profile data"
             }
 
         return {
             "exists": True,
-            "path": str(self.profile_path),
+            # "path": str(self.profile_path),
             "full_name": profile.personal.get('full_name', 'Unknown'),
             "email": profile.personal.get('email', 'Unknown'),
             "skills_categories": len(profile.skills) if profile.skills else 0

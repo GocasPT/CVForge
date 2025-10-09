@@ -2,7 +2,7 @@ import os
 from pathlib import Path
 from typing import Any
 
-from services import ProfileService, ProjectMatcherService, LaTeXService, PDFGeneratorService
+from backend.services import ProfileService, ProjectMatcherService, LaTeXService, PDFGeneratorService
 
 
 def generate_cv(job_description: str, template: str = "basic") -> tuple[Path, list[tuple[Any, Any]]]:

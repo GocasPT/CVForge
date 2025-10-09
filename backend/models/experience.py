@@ -19,3 +19,18 @@ class Experience(Base):
     achievements = Column(JSON, nullable=False)
     created_at = Column(DateTime, default=func.now())
     updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
+
+    def as_dict(self):
+        return {
+            "id": self.id,
+            "position": self.position,
+            "company": self.company,
+            "location": self.location,
+            "start_date": self.start_date,
+            "end_date": self.end_date,
+            "description": self.description,
+            "technologies": self.technologies,
+            "achievements": self.achievements,
+            "created_at": self.created_at,
+            "updated_at": self.updated_at,
+        }
