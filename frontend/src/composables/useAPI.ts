@@ -1,17 +1,25 @@
-import axios from 'axios'
+import axios, { type AxiosInstance } from 'axios'
 
-const api = axios.create({
-  baseURL: '/api', // proxy do Vite
-  timeout: 30000
-})
+let apiClient: AxiosInstance | null = null
 
-api.interceptors.response.use(
-  res => res,
-  err => {
-    return Promise.reject(err)
+export default function useAPI(): AxiosInstance {
+  if (!apiClient) {
+    apiClient = axios.create({
+      baseURL: '/api',
+      timeout: 15000,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
+
+    apiClient.interceptors.response.use(
+      (response) => response,
+      (error) => {
+        console.error('[API Error]', error)
+        return Promise.reject(error)
+      }
+    )
   }
-)
 
-export default function useAPI() {
-  return api
+  return apiClient
 }
