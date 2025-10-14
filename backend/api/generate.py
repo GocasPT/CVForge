@@ -24,7 +24,7 @@ class GenerateResponse(BaseModel):
 
 GENERATED_CVS = {}
 
-@router.post("/", response_model=GenerateResponse)
+@router.post("", response_model=GenerateResponse)
 def generate_cv(data: GenerateRequest):
     try:
         pdf_path, selected_projects = pipeline(

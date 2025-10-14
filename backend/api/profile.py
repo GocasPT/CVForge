@@ -9,14 +9,14 @@ router = APIRouter()
 PROFILE_PATH = Path(os.environ.get("PROFILE_PATH"))
 profile_service = ProfileService(PROFILE_PATH)
 
-@router.get("/")
+@router.get("")
 def get_profile():
     profile = profile_service.load_profile()
     if profile is None:
         raise HTTPException(status_code=404, detail="Profile not found")
     return profile.model_dump()
 
-@router.post("/")
+@router.post("")
 def update_profile(data: dict):
     profile_data = ProfileData(**data)
     success = profile_service.save_profile(profile_data)
@@ -45,8 +45,8 @@ def deep_update(target: Any, updates: Dict[str, Any]) -> None:
             if current_value != value:
                 setattr(target, key, value)
 
-@router.patch("/")
-def update_profile(data: dict):
+@router.patch("")
+def parcial_update_profile(data: dict):
     profile = profile_service.load_profile()
     if profile is None:
         raise HTTPException(status_code=404, detail="Profile not found")

@@ -9,7 +9,7 @@ from backend.models import Experience
 
 router = APIRouter()
 
-@router.get("/")
+@router.get("")
 def get_experiences(
     limit: int = Query(10, ge=1, le=100),
     offset: int = 0,
@@ -77,7 +77,7 @@ class ExperienceCreate(BaseModel):
             }
         }
 
-@router.post("/")
+@router.post("")
 def create_experience(data: ExperienceCreate):
     session = SessionLocal()
     new_experience = Experience(**data.model_dump())

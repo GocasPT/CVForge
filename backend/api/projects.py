@@ -6,7 +6,7 @@ from backend.models import Project
 router = APIRouter()
 session = SessionLocal()
 
-@router.get("/")
+@router.get("")
 def get_projects(
     limit: int = Query(10, ge=1, le=100),
     offset: int = 0,
@@ -41,7 +41,7 @@ def get_project(id: int):
 
     return project
 
-@router.post("/")
+@router.post("")
 def create_project(data: dict):
     new_project = Project(**data)
     if new_project is None:
