@@ -7,6 +7,7 @@
         <RouterLink to="/profile">Profile</RouterLink>
         <RouterLink to="/projects">Projects</RouterLink>
         <RouterLink to="/experiences">Experiences</RouterLink>
+        <RouterLink to="/templates">Templates</RouterLink>
         <RouterLink to="/generate">Generate</RouterLink>
       </nav>
     </header>
