@@ -1,6 +1,5 @@
 from datetime import date
 from typing import Optional, List
-
 from fastapi import APIRouter, Depends, Query, HTTPException
 from pydantic import BaseModel, validator
 from sqlalchemy.orm import Session

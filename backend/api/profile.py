@@ -1,13 +1,11 @@
-import os
 from typing import Any, Dict
-
 from fastapi import APIRouter, HTTPException
+from backend.config import settings
 from backend.services import ProfileService, ProfileData
 from pathlib import Path
 
 router = APIRouter()
-PROFILE_PATH = Path(os.environ.get("PROFILE_PATH"))
-profile_service = ProfileService(PROFILE_PATH)
+profile_service = ProfileService(settings.profile_path)
 
 @router.get("")
 def get_profile():

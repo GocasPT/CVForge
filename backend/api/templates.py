@@ -1,13 +1,11 @@
 import os
-from pathlib import Path
-
 from fastapi import APIRouter
-
+from backend.config import settings
 from backend.services import LaTeXService
 
 router = APIRouter()
-TEMPLATES_PATH = Path(__file__).parent.parent / "templates"
-latex_service = LaTeXService(TEMPLATES_PATH, Path(os.environ.get("GENERATED_DIR")))
+TEMPLATES_PATH = settings.templates_dir
+latex_service = LaTeXService(TEMPLATES_PATH, settings.generated_dir)
 
 @router.get("")
 def get_templates():

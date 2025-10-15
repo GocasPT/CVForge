@@ -1,32 +1,25 @@
-import os
 from typing import List
-
-from backend.config import SessionLocal
+from backend.config import settings, get_db
 from backend.models import Project
 from backend.services import EmbeddingService
 
-
 class ProjectMatcherService(object):
     def __init__(self):
-        self.embedding_service = EmbeddingService(os.environ.get("EMBEDDING_MODEL"))
+        self.embedding_service = EmbeddingService(settings.embedding_model)
         self.projects: List[Project] = []
         pass
 
     def _get_all_projects(self):
-        session = SessionLocal()
-        try:
-            self.projects = session.query(Project).all()
-            return [
-                {
-                    "id": p.id,
-                    "title": p.title,
-                    "description": p.description,
-                    "technologies": p.technologies
-                } for p in self.projects
-            ]
-
-        finally:
-            session.close()
+        db = get_db()
+        self.projects = db.query(Project).all()
+        return [
+            {
+                "id": p.id,
+                "title": p.title,
+                "description": p.description,
+                "technologies": p.technologies
+            } for p in self.projects
+        ]
 
     def match_projects(self, job_description: str, top_n: int = 5):
         self.projects = self._get_all_projects()

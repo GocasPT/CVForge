@@ -1,13 +1,13 @@
-import os
-
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
+
+from backend.config import settings
 
 MAX_NAME_LENGTH = 255
 MAX_PATH_LENGTH = 500
 
 # Database path
-DATABASE_URL = os.environ.get("DATABASE_URL")
+DATABASE_URL = settings.database_url
 if not DATABASE_URL:
     raise ValueError(
         "`DATABASE_URL` environment variable is not set. Please set it to a valid database connection string."

@@ -1,7 +1,5 @@
 from pathlib import Path
-
 from pdflatex import PDFLaTeX
-
 
 class PDFGeneratorService(object):
     def __init__(self, output_dir: Path):

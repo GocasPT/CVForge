@@ -2,7 +2,7 @@ import datetime
 import os
 from pathlib import Path
 from string import Template
-
+from backend.config import settings
 
 class LaTeXService(object):
     def __init__(self, template_dir: Path, output_dir: Path):
@@ -25,7 +25,7 @@ class LaTeXService(object):
     def save_rendered(self, template_name: str, context: dict) -> Path:
         rendered_tex = self.render(template_name, context)
 
-        output_dir = Path("backend/data/generated")
+        output_dir = settings.generated_dir
         output_dir.mkdir(parents=True, exist_ok=True)
 
         timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
