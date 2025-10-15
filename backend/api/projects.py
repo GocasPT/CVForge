@@ -1,100 +1,92 @@
-from fastapi import APIRouter, Depends, Query, HTTPException
+from typing import List
+from fastapi import APIRouter, Query, HTTPException, Depends, status
 from sqlalchemy.orm import Session
 from backend.config import get_db
-from backend.models import Project
+from backend.repositories import ProjectRepository
+from backend.schemas import (
+    ProjectCreate,
+    ProjectUpdate,
+    ProjectResponse,
+    ProjectListResponse
+)
 
 router = APIRouter()
 
-@router.get("")
+def get_project_repository(db: Session = Depends(get_db)) -> ProjectRepository:
+    return ProjectRepository(db)
+
+@router.get("", response_model=ProjectListResponse)
 def get_projects(
-    limit: int = Query(10, ge=1, le=100),
-    offset: int = 0,
-    search: str | None = None,
-    db: Session = Depends(get_db)
-):
-    query = db.query(Project)
-
-    if search:
-        query = query.filter(
-            (Project.title.ilike(f"%{search}%")) |
-            (Project.description.ilike(f"%{search}%"))
-        )
-
-    projects = query.offset(offset).limit(limit).all()
+    limit: int = Query(10, ge=1, le=100, description="Number of projects to return"),
+    offset: int = Query(0, ge=0, description="Offset for pagination"),
+    search: str | None = Query(None, description="Search term for title/description"),
+    repo: ProjectRepository = Depends(get_project_repository)
+) -> ProjectListResponse:
+    projects, total = repo.get_all(limit=limit, offset=offset, search=search)
     
-    return { "offset": offset, "limit": limit, "projects": projects }
+    return ProjectListResponse(
+        total=total,
+        offset=offset,
+        limit=limit,
+        projects=[ProjectResponse.model_validate(p) for p in projects],
+    )
 
-@router.get("/{id}")
+@router.get("/{project_id}", response_model=ProjectResponse)
 def get_project(
-    id: int,
-    db: Session = Depends(get_db)
-):
-    query = db.query(Project)
-
-    project = query.get(id)
+    project_id: int,
+    repo: ProjectRepository = Depends(get_project_repository)
+) -> ProjectResponse:
+    project = repo.get_by_id(project_id)
+    
     if not project:
-        raise HTTPException(status_code=404, detail="Project not found")
-
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Project with id {project_id} not found"
+        )
+    
     return project
 
-@router.post("")
+@router.post("", response_model=ProjectResponse, status_code=status.HTTP_201_CREATED)
 def create_project(
-    data: dict,
-    db: Session = Depends(get_db)
-):
-    new_project = Project(**data)
-    if new_project is None:
-        raise HTTPException(status_code=500, detail="JSON in wrong format")
-
+    project_data: ProjectCreate,
+    repo: ProjectRepository = Depends(get_project_repository)
+) -> ProjectResponse:
     try:
-        db.add(new_project)
-        db.commit()
+        new_project = repo.create(project_data)
+        return new_project
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to create project: {str(e)}"
+        )
 
-        project_dict = new_project.as_dict()
-    except Exception:
-        db.rollback()
-        raise HTTPException(status_code=500, detail="Something went wrong")
-
-    return { "status": "created", "project": project_dict }
-
-@router.put("/{id}")
+@router.put("/{project_id}", response_model=ProjectResponse)
 def update_project(
-    id: int, data: dict,
-    db: Session = Depends(get_db)
-):
-    try:
-        project = db.query(Project).get(id)
-        if not project:
-            raise HTTPException(status_code=404, detail="Project not found")
+    project_id: int,
+    project_data: ProjectUpdate,
+    repo: ProjectRepository = Depends(get_project_repository)
+) -> ProjectResponse:
+    updated_project = repo.update(project_id, project_data)
+    
+    if not updated_project:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Project with id {project_id} not found"
+        )
+    
+    return updated_project
 
-        for key, value in data.items():
-            if hasattr(project, key):
-                setattr(project, key, value)
-
-        db.commit()
-        updated_project = project.as_dict()
-
-    except Exception:
-        db.rollback()
-        raise HTTPException(status_code=500, detail="Something went wrong")
-
-    return { "status": "updated", "project": updated_project }
-
-@router.delete("/{id}")
+@router.delete("/{project_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_project(
-    id: int,
-    db: Session = Depends(get_db)
+    project_id: int,
+    repo: ProjectRepository = Depends(get_project_repository)
 ):
-    try:
-        project = db.query(Project).get(id)
-        if not project:
-            raise HTTPException(status_code=404, detail="Project not found")
-
-        db.delete(project)
-        db.commit()
-
-    except Exception:
-        db.rollback()
-        raise HTTPException(status_code=500, detail="Something went wrong")
-
-    return { "status": "deleted" }
+    success = repo.delete(project_id)
+    
+    if not success:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Project with id {project_id} not found"
+        )
+    
+    return None
