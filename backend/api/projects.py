@@ -23,12 +23,12 @@ def get_projects(
     repo: ProjectRepository = Depends(get_project_repository)
 ) -> ProjectListResponse:
     projects, total = repo.get_all(limit=limit, offset=offset, search=search)
-    
+
     return ProjectListResponse(
         total=total,
         offset=offset,
         limit=limit,
-        projects=[ProjectResponse.model_validate(p) for p in projects],
+        projects=[ProjectResponse.from_orm_model(p) for p in projects],
     )
 
 @router.get("/{project_id}", response_model=ProjectResponse)

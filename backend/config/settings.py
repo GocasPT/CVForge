@@ -12,20 +12,16 @@ class Settings(BaseSettings):
     )
     
     # Database
-    database_url: str = "sqlite:///./backend/data/cvforge.db"
+    database_url: str = "sqlite:///./data/cvforge.db"
     
     # Paths
-    data_dir: Path = Path("./backend/data")
-    generated_dir: Path = Path("./backend/data/generated")
-    profile_path: Path = Path("./backend/config/profile.json")
-    templates_dir: Path = Path("./backend/templates")
+    data_dir: Path = Path("./data")
+    generated_dir: Path = Path("./data/generated")
+    profile_path: Path = Path("./config/profile.json")
+    templates_dir: Path = Path("./templates")
     
     # AI Model
     embedding_model: str = "paraphrase-multilingual-MiniLM-L12-v2"
-    
-    # API
-    api_host: str = "0.0.0.0"
-    api_port: int = 8000
     
     # CV Generation
     max_projects_per_cv: int = 5
