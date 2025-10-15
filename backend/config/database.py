@@ -39,3 +39,10 @@ def delete_db():
 def reset_db():
     delete_db()
     init_db()
+
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()

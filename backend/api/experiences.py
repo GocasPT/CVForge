@@ -1,10 +1,10 @@
 from datetime import date
 from typing import Optional, List
 
-from fastapi import APIRouter, Query, HTTPException
+from fastapi import APIRouter, Depends, Query, HTTPException
 from pydantic import BaseModel, validator
-
-from backend.config import SessionLocal
+from sqlalchemy.orm import Session
+from backend.config import get_db
 from backend.models import Experience
 
 router = APIRouter()
@@ -13,37 +13,32 @@ router = APIRouter()
 def get_experiences(
     limit: int = Query(10, ge=1, le=100),
     offset: int = 0,
-    search: str | None = None
+    search: str | None = None,
+    db: Session = Depends(get_db)
 ):
-    session = SessionLocal()
-    try:
-        query = session.query(Experience)
+    query = db.query(Experience)
 
-        if search:
-            query = query.filter(
-                (Experience.position.ilike(f"%{search}%")) |
-                (Experience.company.ilike(f"%{search}%")) |
-                (Experience.description.ilike(f"%{search}%"))
-            )
+    if search:
+        query = query.filter(
+            (Experience.position.ilike(f"%{search}%")) |
+            (Experience.company.ilike(f"%{search}%")) |
+            (Experience.description.ilike(f"%{search}%"))
+        )
 
-        experiences = query.order_by(Experience.start_date.desc()).offset(offset).limit(limit).all()
-    finally:
-        session.close()
+    experiences = query.order_by(Experience.start_date.desc()).offset(offset).limit(limit).all()
 
-    return {"experiences": experiences, "offset": offset, "limit": limit}
+    return { "offset": offset, "limit": limit, "experiences": experiences }
 
 @router.get("/{id}")
-def get_experience(id: int):
-    session = SessionLocal()
-    try:
-        query = session.query(Experience)
+def get_experience(
+    id: int,
+    db: Session = Depends(get_db)
+):
+    query = db.query(Experience)
 
-        experience = query.get(id)
-        if not experience:
-            raise HTTPException(status_code=404, detail="Experience not found")
-
-    finally:
-        session.close()
+    experience = query.get(id)
+    if not experience:
+        raise HTTPException(status_code=404, detail="Experience not found")
 
     return experience
 
@@ -78,32 +73,35 @@ class ExperienceCreate(BaseModel):
         }
 
 @router.post("")
-def create_experience(data: ExperienceCreate):
-    session = SessionLocal()
+def create_experience(
+    data: ExperienceCreate,
+    db: Session = Depends(get_db)
+):
     new_experience = Experience(**data.model_dump())
     if new_experience is None:
         raise HTTPException(status_code=500, detail="JSON in wrong format")
 
     try:
-        session.add(new_experience)
-        session.commit()
+        db.add(new_experience)
+        db.commit()
 
         experience_dict = new_experience.as_dict()
 
     except Exception as e:
-        session.rollback()
+        db.rollback()
         raise HTTPException(status_code=500, detail="Something went wrong")
 
-    finally:
-        session.close()
 
     return {"status": "created", "experience": experience_dict}
 
 @router.put("/{id}")
-def update_experience(id: int, data: dict):
-    session = SessionLocal()
+def update_experience(
+    id: int,
+    data: dict,
+    db: Session = Depends(get_db)
+):
     try:
-        experience = session.query(Experience).get(id)
+        experience = db.query(Experience).get(id)
         if not experience:
             raise HTTPException(status_code=404, detail="Experience not found")
 
@@ -111,34 +109,30 @@ def update_experience(id: int, data: dict):
             if hasattr(experience, key):
                 setattr(experience, key, value)
 
-        session.commit()
+        db.commit()
         updated_experience = experience.as_dict()
 
     except Exception:
-        session.rollback()
+        db.rollback()
         raise HTTPException(status_code=500, detail="Something went wrong")
-
-    finally:
-        session.close()
 
     return {"status": "updated", "experience": updated_experience}
 
 @router.delete("/{id}")
-def delete_experience(id: int):
-    session = SessionLocal()
+def delete_experience(
+    id: int,
+    db: Session = Depends(get_db)
+):
     try:
-        experience = session.query(Experience).get(id)
+        experience = db.query(Experience).get(id)
         if not experience:
             raise HTTPException(status_code=404, detail="Experience not found")
 
-        session.delete(experience)
-        session.commit()
+        db.delete(experience)
+        db.commit()
 
     except Exception:
-        session.rollback()
+        db.rollback()
         raise HTTPException(status_code=500, detail="Something went wrong")
-
-    finally:
-        session.close()
 
     return {"status": "deleted"}
