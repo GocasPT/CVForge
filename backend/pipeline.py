@@ -1,20 +1,31 @@
 from pathlib import Path
 from typing import Any
-from backend.config import settings
-from backend.services import ProfileService, ProjectMatcherService, LaTeXService, PDFGeneratorService
+from config import settings
+from services import (
+    ProfileService,
+    ProjectMatcherService,
+    LaTeXService,
+    PDFGeneratorService
+)
 
 def generate_cv(job_description: str, template: str = "basic") -> tuple[Path, list[tuple[Any, Any]]]:
     print("=========== A iniciar pipeline ===========")
 
     profile = ProfileService(settings.profile_path).load_profile()
+    if not profile:
+        pass
+
     matcher = ProjectMatcherService()
     latex = LaTeXService(settings.templates_dir, settings.generated_dir)
     pdf = PDFGeneratorService(settings.generated_dir)
 
     print(
-        f"Profile: \n\tname: {profile.personal.get('full_name')}\n\temail: {profile.personal.get('email')}\n\t{profile.personal.get('summary')}")
+        f"Profile: \n\tname: {profile.personal.get('full_name')}\n\temail: {profile.personal.get('email')}\n\t{profile.personal.get('summary')}\n")
 
     matches = matcher.match_projects(job_description)
+    if not matches:
+        pass
+
     print("\nMatching Results:")
     for m in matches:
         print(f"\tRank {m['rank']} | Score {m['score']:.3f} | Projeto: {m['project']['title']}")

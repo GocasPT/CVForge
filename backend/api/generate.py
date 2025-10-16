@@ -4,7 +4,7 @@ from pydantic import BaseModel
 from pathlib import Path
 import datetime
 import uuid
-from backend import generate_cv as pipeline
+from pipeline import generate_cv as pipeline
 
 router = APIRouter()
 

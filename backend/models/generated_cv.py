@@ -3,7 +3,8 @@ from sqlalchemy.dialects.sqlite import JSON
 from sqlalchemy.orm import relationship
 from sqlalchemy.types import FLOAT
 
-from backend.config import Base, MAX_PATH_LENGTH
+from config import MAX_PATH_LENGTH
+from models import Base
 
 
 class GeneratedCV(Base):

@@ -1,9 +1,9 @@
-from typing import List
 from fastapi import APIRouter, Query, HTTPException, Depends, status
 from sqlalchemy.orm import Session
-from backend.config import get_db
-from backend.repositories import ProjectRepository
-from backend.schemas import (
+from config import get_db
+from models import Project
+from repositories import ProjectRepo
+from schemas import (
     ProjectCreate,
     ProjectUpdate,
     ProjectResponse,
@@ -12,81 +12,108 @@ from backend.schemas import (
 
 router = APIRouter()
 
-def get_project_repository(db: Session = Depends(get_db)) -> ProjectRepository:
-    return ProjectRepository(db)
-
-@router.get("", response_model=ProjectListResponse)
+@router.get("", response_model=ProjectListResponse, status_code=status.HTTP_200_OK)
 def get_projects(
     limit: int = Query(10, ge=1, le=100, description="Number of projects to return"),
     offset: int = Query(0, ge=0, description="Offset for pagination"),
     search: str | None = Query(None, description="Search term for title/description"),
-    repo: ProjectRepository = Depends(get_project_repository)
+    db: Session = Depends(get_db)
 ) -> ProjectListResponse:
-    projects, total = repo.get_all(limit=limit, offset=offset, search=search)
+    repo = ProjectRepo(db)
+
+    with db.begin():
+        projects, total = repo.list(limit=limit, offset=offset, search=search)
 
     return ProjectListResponse(
         total=total,
         offset=offset,
         limit=limit,
-        projects=[ProjectResponse.from_orm_model(p) for p in projects],
+        projects=[ProjectResponse.model_validate(p) for p in projects],
     )
 
-@router.get("/{project_id}", response_model=ProjectResponse)
+
+@router.get("/{id}", response_model=ProjectResponse)
 def get_project(
-    project_id: int,
-    repo: ProjectRepository = Depends(get_project_repository)
+    id: int,
+    db: Session = Depends(get_db)
 ) -> ProjectResponse:
-    project = repo.get_by_id(project_id)
+    repo = ProjectRepo(db)
+
+    with db.begin():
+        project = repo.get_by_id(id)
     
     if not project:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Project with id {project_id} not found"
+            detail=f"Project with id {id} not found"
         )
     
-    return project
+    return ProjectResponse.model_validate(project)
 
 @router.post("", response_model=ProjectResponse, status_code=status.HTTP_201_CREATED)
 def create_project(
-    project_data: ProjectCreate,
-    repo: ProjectRepository = Depends(get_project_repository)
+    payload: ProjectCreate,
+    db: Session = Depends(get_db)
 ) -> ProjectResponse:
-    try:
-        new_project = repo.create(project_data)
-        return new_project
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to create project: {str(e)}"
-        )
+    repo = ProjectRepo(db)
 
-@router.put("/{project_id}", response_model=ProjectResponse)
+    project = Project(
+        title=payload.title,
+        description=payload.description,
+        technologies=payload.technologies,
+        achievements=payload.achievements,
+        duration=payload.duration,
+        role=payload.role
+    )
+
+    with db.begin():
+        repo.create(project)
+
+    db.refresh(project)
+    return ProjectResponse.model_validate(project)
+
+@router.put("/{id}", response_model=ProjectResponse)
 def update_project(
-    project_id: int,
-    project_data: ProjectUpdate,
-    repo: ProjectRepository = Depends(get_project_repository)
+    id: int,
+    payload: ProjectUpdate,
+    db: Session = Depends(get_db)
 ) -> ProjectResponse:
-    updated_project = repo.update(project_id, project_data)
+    repo = ProjectRepo(db)
+
+    project = Project(
+        title=payload.title,
+        description=payload.description,
+        technologies=payload.technologies,
+        achievements=payload.achievements,
+        duration=payload.duration,
+        role=payload.role
+    )
+
+    with db.begin():
+        updated_project = repo.update(id, project)
     
     if not updated_project:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Project with id {project_id} not found"
+            detail=f"Project with id {id} not found"
         )
     
-    return updated_project
+    return ProjectResponse.model_validate(updated_project)
 
-@router.delete("/{project_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/{id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_project(
-    project_id: int,
-    repo: ProjectRepository = Depends(get_project_repository)
+    id: int,
+    db: Session = Depends(get_db)
 ):
-    success = repo.delete(project_id)
+    repo = ProjectRepo(db)
+
+    with db.begin():
+        success = repo.delete(id)
     
     if not success:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Project with id {project_id} not found"
+            detail=f"Project with id {id} not found"
         )
     
     return None

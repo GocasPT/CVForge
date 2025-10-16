@@ -1,7 +1,8 @@
 from sqlalchemy import Column, Integer, String, Text, Boolean, DateTime, func
 from sqlalchemy.orm import relationship
 
-from backend.config import Base, MAX_NAME_LENGTH, MAX_PATH_LENGTH
+from config import MAX_NAME_LENGTH, MAX_PATH_LENGTH
+from models import Base
 
 
 class CVTemplate(Base):

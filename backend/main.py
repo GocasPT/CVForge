@@ -1,6 +1,8 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from backend.api import (
+from config import engine
+from models import Base
+from api import (
     profile,
     projects,
     experiences,
@@ -9,6 +11,8 @@ from backend.api import (
 )
 
 app = FastAPI(title="CVForge API")
+
+Base.metadata.create_all(bind=engine)
 
 app.add_middleware(
     CORSMiddleware,

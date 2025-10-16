@@ -1,15 +1,23 @@
-from backend.schemas.project import (
-    ProjectBase,
+from schemas.project import (
     ProjectCreate,
     ProjectUpdate,
     ProjectResponse,
     ProjectListResponse
 )
+from schemas.experience import (
+    ExperienceCreate,
+    ExperienceUpdate,
+    ExperienceResponse,
+    ExperienceListResponse
+)
 
 __all__ = [
-    "ProjectBase",
     "ProjectCreate",
     "ProjectUpdate", 
     "ProjectResponse",
-    "ProjectListResponse"
+    "ProjectListResponse",
+    "ExperienceCreate",
+    "ExperienceUpdate",
+    "ExperienceResponse",
+    "ExperienceListResponse"
 ]

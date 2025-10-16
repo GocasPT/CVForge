@@ -1,36 +1,22 @@
-from sqlalchemy import Column, Integer, String, DateTime, Text, func
-from sqlalchemy.dialects.sqlite import JSON
+from typing import Optional
+from datetime import datetime
+from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy import String, Integer, Text, JSON, DateTime, func
 from sqlalchemy.sql.sqltypes import Date
-
-from backend.config import Base, MAX_NAME_LENGTH
-
+from models import Base
+from config import MAX_NAME_LENGTH
 
 class Experience(Base):
     __tablename__ = "experiences"
 
-    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
-    position = Column(String(MAX_NAME_LENGTH), nullable=False)
-    company = Column(String(MAX_NAME_LENGTH), nullable=False)
-    location = Column(String(MAX_NAME_LENGTH), nullable=True)
-    start_date = Column(Date, nullable=False)
-    end_date = Column(Date, nullable=True)
-    description = Column(Text, nullable=True)
-    technologies = Column(JSON, nullable=False)
-    achievements = Column(JSON, nullable=False)
-    created_at = Column(DateTime, default=func.now())
-    updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
-
-    def as_dict(self):
-        return {
-            "id": self.id,
-            "position": self.position,
-            "company": self.company,
-            "location": self.location,
-            "start_date": self.start_date,
-            "end_date": self.end_date,
-            "description": self.description,
-            "technologies": self.technologies,
-            "achievements": self.achievements,
-            "created_at": self.created_at,
-            "updated_at": self.updated_at,
-        }
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True, autoincrement=True)
+    position: Mapped[str] = mapped_column(String(MAX_NAME_LENGTH), nullable=False)
+    company: Mapped[str] = mapped_column(String(MAX_NAME_LENGTH), nullable=False)
+    location: Mapped[Optional[str]] = mapped_column(String(MAX_NAME_LENGTH), nullable=True)
+    start_date: Mapped[Date] = mapped_column(Date, nullable=False)
+    end_date: Mapped[Optional[Date]] = mapped_column(Date, nullable=True)
+    description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    technologies: Mapped[list] = mapped_column(JSON, nullable=False)
+    achievements: Mapped[list] = mapped_column(JSON, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=func.now(), onupdate=func.now())

@@ -1,137 +1,123 @@
-from datetime import date
-from typing import Optional, List
-from fastapi import APIRouter, Depends, Query, HTTPException
-from pydantic import BaseModel, validator
+from fastapi import APIRouter, Query, HTTPException, Depends, status
 from sqlalchemy.orm import Session
-from backend.config import get_db
-from backend.models import Experience
+from config import get_db
+from models import Experience
+from repositories import ExperienceRepo
+from schemas import (
+    ExperienceCreate,
+    ExperienceUpdate,
+    ExperienceResponse,
+    ExperienceListResponse
+)
 
 router = APIRouter()
 
-@router.get("")
-def get_experiences(
-    limit: int = Query(10, ge=1, le=100),
-    offset: int = 0,
-    search: str | None = None,
+@router.get("", response_model=ExperienceListResponse, status_code=status.HTTP_200_OK)
+def get_projects(
+    limit: int = Query(10, ge=1, le=100, description="Number of projects to return"),
+    offset: int = Query(0, ge=0, description="Offset for pagination"),
+    search: str | None = Query(None, description="Search term for position/company/description"),
     db: Session = Depends(get_db)
-):
-    query = db.query(Experience)
+) -> ExperienceListResponse:
+    repo = ExperienceRepo(db)
 
-    if search:
-        query = query.filter(
-            (Experience.position.ilike(f"%{search}%")) |
-            (Experience.company.ilike(f"%{search}%")) |
-            (Experience.description.ilike(f"%{search}%"))
-        )
+    with db.begin():
+        experiences, total = repo.list(limit=limit, offset=offset, search=search)
 
-    experiences = query.order_by(Experience.start_date.desc()).offset(offset).limit(limit).all()
+    return ExperienceListResponse(
+        total=total,
+        offset=offset,
+        limit=limit,
+        experiences=[ExperienceResponse.model_validate(xp) for xp in experiences],
+    )
 
-    return { "offset": offset, "limit": limit, "experiences": experiences }
 
-@router.get("/{id}")
-def get_experience(
+@router.get("/{id}", response_model=ExperienceResponse)
+def get_project(
     id: int,
     db: Session = Depends(get_db)
-):
-    query = db.query(Experience)
+) -> ExperienceResponse:
+    repo = ExperienceRepo(db)
 
-    experience = query.get(id)
+    with db.begin():
+        experience = repo.get_by_id(id)
+    
     if not experience:
-        raise HTTPException(status_code=404, detail="Experience not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Experience with id {id} not found"
+        )
+    
+    return ExperienceResponse.model_validate(experience)
 
-    return experience
-
-class ExperienceCreate(BaseModel):
-    position: str
-    company: str
-    location: Optional[str] = None
-    start_date: date
-    end_date: Optional[date] = None
-    description: Optional[str] = None
-    technologies: Optional[List[str]] = None
-    achievements: Optional[List[str]] = None
-
-    @validator('end_date')
-    def end_date_after_start_date(cls, v, values):
-        if v and 'start_date' in values and v < values['start_date']:
-            raise ValueError('end_date must be after start_date')
-        return v
-
-    class Config:
-        json_schema_extra = {
-            "example": {
-                "position": "Backend Engineer",
-                "company": "TechCorp",
-                "location": "Remote",
-                "start_date": "2022-01-01",
-                "end_date": "2023-12-31",
-                "description": "Developed scalable APIs",
-                "technologies": ["Python", "FastAPI", "PostgreSQL"],
-                "achievements": ["Increased API performance by 40%"]
-            }
-        }
-
-@router.post("")
-def create_experience(
-    data: ExperienceCreate,
+@router.post("", response_model=ExperienceResponse, status_code=status.HTTP_201_CREATED)
+def create_project(
+    payload: ExperienceCreate,
     db: Session = Depends(get_db)
-):
-    new_experience = Experience(**data.model_dump())
-    if new_experience is None:
-        raise HTTPException(status_code=500, detail="JSON in wrong format")
+) -> ExperienceResponse:
+    repo = ExperienceRepo(db)
 
-    try:
-        db.add(new_experience)
-        db.commit()
+    project = Experience(
+        position=payload.position,
+        company=payload.company,
+        location=payload.location,
+        start_date=payload.start_date,
+        end_date=payload.end_date,
+        description=payload.description,
+        technologies=payload.technologies,
+        achievements=payload.achievements
+    )
 
-        experience_dict = new_experience.as_dict()
+    with db.begin():
+        repo.create(project)
 
-    except Exception as e:
-        db.rollback()
-        raise HTTPException(status_code=500, detail="Something went wrong")
+    db.refresh(project)
+    return ExperienceResponse.model_validate(project)
 
-
-    return {"status": "created", "experience": experience_dict}
-
-@router.put("/{id}")
-def update_experience(
+@router.put("/{id}", response_model=ExperienceResponse)
+def update_project(
     id: int,
-    data: dict,
+    payload: ExperienceUpdate,
     db: Session = Depends(get_db)
-):
-    try:
-        experience = db.query(Experience).get(id)
-        if not experience:
-            raise HTTPException(status_code=404, detail="Experience not found")
+) -> ExperienceResponse:
+    repo = ExperienceRepo(db)
 
-        for key, value in data.items():
-            if hasattr(experience, key):
-                setattr(experience, key, value)
+    project = Experience(
+        position=payload.position,
+        company=payload.company,
+        location=payload.location,
+        start_date=payload.start_date,
+        end_date=payload.end_date,
+        description=payload.description,
+        technologies=payload.technologies,
+        achievements=payload.achievements
+    )
 
-        db.commit()
-        updated_experience = experience.as_dict()
+    with db.begin():
+        updated_project = repo.update(id, project)
+    
+    if not updated_project:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Experience with id {id} not found"
+        )
+    
+    return ExperienceResponse.model_validate(updated_project)
 
-    except Exception:
-        db.rollback()
-        raise HTTPException(status_code=500, detail="Something went wrong")
-
-    return {"status": "updated", "experience": updated_experience}
-
-@router.delete("/{id}")
-def delete_experience(
+@router.delete("/{id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_project(
     id: int,
     db: Session = Depends(get_db)
 ):
-    try:
-        experience = db.query(Experience).get(id)
-        if not experience:
-            raise HTTPException(status_code=404, detail="Experience not found")
+    repo = ExperienceRepo(db)
 
-        db.delete(experience)
-        db.commit()
-
-    except Exception:
-        db.rollback()
-        raise HTTPException(status_code=500, detail="Something went wrong")
-
-    return {"status": "deleted"}
+    with db.begin():
+        success = repo.delete(id)
+    
+    if not success:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Experience with id {id} not found"
+        )
+    
+    return None

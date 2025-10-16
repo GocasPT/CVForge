@@ -1,9 +1,11 @@
-from backend.models.cv_template import CVTemplate
-from backend.models.experience import Experience
-from backend.models.generated_cv import GeneratedCV
-from backend.models.project import Project
+from models.base import Base
+from models.cv_template import CVTemplate
+from models.experience import Experience
+from models.generated_cv import GeneratedCV
+from models.project import Project
 
 __all__ = [
+    "Base",
     "Project",
     "Experience",
     "CVTemplate",

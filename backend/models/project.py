@@ -1,31 +1,20 @@
-from sqlalchemy import Column, String, Integer, Text, DateTime, func
-from sqlalchemy.dialects.sqlite import JSON
-
-from backend.config import Base, MAX_NAME_LENGTH
+from typing import Optional
+from datetime import datetime
+from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy import String, Integer, Text, JSON, DateTime, func
+from models import Base
+from config import MAX_NAME_LENGTH
 
 
 class Project(Base):
     __tablename__ = "projects"
 
-    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
-    title = Column(String(MAX_NAME_LENGTH), nullable=False)
-    description = Column(Text, nullable=False)
-    technologies = Column(JSON, nullable=False)
-    achievements = Column(JSON, nullable=False)
-    duration = Column(String(MAX_NAME_LENGTH), nullable=False)
-    role = Column(String(MAX_NAME_LENGTH), nullable=True)
-    created_at = Column(DateTime, default=func.now())
-    updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
-
-    def as_dict(self):
-        return {
-            "id": self.id,
-            "title": self.title,
-            "description": self.description,
-            "technologies": self.technologies,
-            "achievements": self.achievements,
-            "duration": self.duration,
-            "role": self.role,
-            "created_at": self.created_at,
-            "updated_at": self.updated_at,
-        }
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True, autoincrement=True)
+    title: Mapped[str] = mapped_column(String(MAX_NAME_LENGTH), nullable=False)
+    description: Mapped[str] = mapped_column(Text, nullable=False)
+    technologies: Mapped[list] = mapped_column(JSON, nullable=False)
+    achievements: Mapped[list] = mapped_column(JSON, nullable=False)
+    duration: Mapped[str] = mapped_column(String(100), nullable=False)
+    role: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=func.now(), onupdate=func.now())

@@ -1,7 +1,7 @@
 import os
 from fastapi import APIRouter
-from backend.config import settings
-from backend.services import LaTeXService
+from config import settings
+from services import LaTeXService
 
 router = APIRouter()
 TEMPLATES_PATH = settings.templates_dir

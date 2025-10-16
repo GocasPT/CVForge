@@ -1,7 +1,8 @@
+from typing import Generator
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, declarative_base
+from sqlalchemy.orm import sessionmaker, declarative_base, Session
 
-from backend.config import settings
+from config import settings
 
 MAX_NAME_LENGTH = 255
 MAX_PATH_LENGTH = 500
@@ -18,31 +19,12 @@ engine = create_engine(
     DATABASE_URL,
     connect_args={
         "check_same_thread": False
-    }
+    } if DATABASE_URL.startswith("sqlite") else {},
+    future=True,
 )
 
 # Session Local (every session request/creation uses this)
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
-# Basis for SQLAlchemy models to inherit
-Base = declarative_base()
-
-
-def init_db():
-    Base.metadata.create_all(bind=engine)
-
-
-def delete_db():
-    Base.metadata.drop_all(bind=engine)
-
-
-def reset_db():
-    delete_db()
-    init_db()
+SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False, future=True, expire_on_commit=False)
 
 def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
+    return SessionLocal

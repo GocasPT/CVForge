@@ -1,0 +1,12 @@
+# Core dependecies
+fastapi[standard]
+uvicorn[standard]
+sqlalchemy
+pydantic
+pydantic-settings
+click
+rich
+numpy
+faiss-cpu
+sentence_transformers
+pdflatex

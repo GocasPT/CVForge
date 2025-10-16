@@ -1,27 +1,46 @@
 from pathlib import Path
+import logging
 from pdflatex import PDFLaTeX
 
-class PDFGeneratorService(object):
+logger = logging.getLogger(__name__)
+
+
+class PDFGeneratorService:
     def __init__(self, output_dir: Path):
         self.output_dir = Path(output_dir).absolute()
+        self.output_dir.mkdir(parents=True, exist_ok=True)
 
     def generate(self, tex_path: Path) -> Path:
-        return self._compile_pdf(tex_path)
+        """Compile tex_path into a PDF and return the PDF path."""
+        tex_path = Path(tex_path).absolute()
+        if not tex_path.exists():
+            raise FileNotFoundError(f"TeX file not found: {tex_path}")
 
-    def _compile_pdf(self, tex_path: Path):
-        tex_path_abs = Path(tex_path).absolute()
+        try:
+            pdf_path = self._compile_pdf(tex_path)
+            self._clean_temp_files(tex_path)
+            return pdf_path
+        except Exception as exc:
+            logger.exception("PDF generation failed for %s", tex_path)
+            raise
 
-        pdf_latex = PDFLaTeX.from_texfile(str(tex_path_abs))
+    def _compile_pdf(self, tex_path: Path) -> Path:
+        pdf_latex = PDFLaTeX.from_texfile(str(tex_path))
         pdf_latex.set_output_directory(str(self.output_dir))
         pdf, log, completed_process = pdf_latex.create_pdf(keep_pdf_file=True)
 
-        if completed_process.returncode != 0:
-            raise RuntimeError("LaTeX compilation failed → check template\nError: " + completed_process.stderr)
+        if hasattr(completed_process, "returncode") and completed_process.returncode != 0:
+            stderr = getattr(completed_process, "stderr", "<no stderr>")
+            raise RuntimeError(f"LaTeX compilation failed (returncode={completed_process.returncode}). Stderr: {stderr!s}")
 
-        return Path(f"{self.output_dir}/{Path(tex_path).name.replace(".tex", ".pdf")}")
+        pdf_filename = tex_path.with_suffix(".pdf").name
+        return self.output_dir / pdf_filename
 
-    def _clean_temp_files(self, tex_path: Path):
-        for ext in [".aux", ".log"]:
+    def _clean_temp_files(self, tex_path: Path) -> None:
+        for ext in [".aux", ".log", ".out", ".toc"]:
             tmp_file = self.output_dir / f"{tex_path.stem}{ext}"
-            if tmp_file.exists():
-                tmp_file.unlink()
+            try:
+                if tmp_file.exists():
+                    tmp_file.unlink()
+            except Exception:
+                logger.warning("Could not remove temp file %s", tmp_file)
