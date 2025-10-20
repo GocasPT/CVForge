@@ -1,0 +1,30 @@
+changelog:
+  exclude:
+    labels:
+      - chore
+      - test
+      - refactor
+      - style
+      - wip
+
+  categories:
+    - title: "✨ Novas Funcionalidades e Melhores"
+      labels:
+        - feat
+        - feature
+        - enhancement
+    - title: "🐛 Correções de Bugs"
+      labels:
+        - fix
+        - bugfix
+        - bug
+    - title: "🚨 Mudanças que Quebram (Atenção!)"
+      labels:
+        - breaking-change
+      
+    - title: "📚 Documentação e Tarefas de Código"
+      labels:
+        - docs
+        - chore
+        - refactor
+        
