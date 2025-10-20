@@ -1,6 +1,4 @@
-from fastapi import APIRouter, Query, HTTPException, Depends, status
-from sqlalchemy.orm import Session
-from config import get_db
+from fastapi import APIRouter, Query, HTTPException, status
 from models import Experience
 from repositories import ExperienceRepo
 from schemas import (
@@ -14,15 +12,13 @@ router = APIRouter()
 
 @router.get("", response_model=ExperienceListResponse, status_code=status.HTTP_200_OK)
 def get_projects(
-    limit: int = Query(10, ge=1, le=100, description="Number of projects to return"),
+    limit: int = Query(10, ge=1, le=100, description="Number of experience to return"),
     offset: int = Query(0, ge=0, description="Offset for pagination"),
     search: str | None = Query(None, description="Search term for position/company/description"),
-    db: Session = Depends(get_db)
 ) -> ExperienceListResponse:
-    repo = ExperienceRepo(db)
+    repo = ExperienceRepo()
 
-    with db.begin():
-        experiences, total = repo.list(limit=limit, offset=offset, search=search)
+    experiences, total = repo.list(limit=limit, offset=offset, search=search)
 
     return ExperienceListResponse(
         total=total,
@@ -35,12 +31,10 @@ def get_projects(
 @router.get("/{id}", response_model=ExperienceResponse)
 def get_project(
     id: int,
-    db: Session = Depends(get_db)
 ) -> ExperienceResponse:
-    repo = ExperienceRepo(db)
+    repo = ExperienceRepo()
 
-    with db.begin():
-        experience = repo.get_by_id(id)
+    experience = repo.get_by_id(id)
     
     if not experience:
         raise HTTPException(
@@ -53,9 +47,8 @@ def get_project(
 @router.post("", response_model=ExperienceResponse, status_code=status.HTTP_201_CREATED)
 def create_project(
     payload: ExperienceCreate,
-    db: Session = Depends(get_db)
 ) -> ExperienceResponse:
-    repo = ExperienceRepo(db)
+    repo = ExperienceRepo()
 
     project = Experience(
         position=payload.position,
@@ -68,19 +61,16 @@ def create_project(
         achievements=payload.achievements
     )
 
-    with db.begin():
-        repo.create(project)
+    repo.create(project)
 
-    db.refresh(project)
     return ExperienceResponse.model_validate(project)
 
 @router.put("/{id}", response_model=ExperienceResponse)
 def update_project(
     id: int,
     payload: ExperienceUpdate,
-    db: Session = Depends(get_db)
 ) -> ExperienceResponse:
-    repo = ExperienceRepo(db)
+    repo = ExperienceRepo()
 
     project = Experience(
         position=payload.position,
@@ -93,8 +83,7 @@ def update_project(
         achievements=payload.achievements
     )
 
-    with db.begin():
-        updated_project = repo.update(id, project)
+    updated_project = repo.update(id, project)
     
     if not updated_project:
         raise HTTPException(
@@ -107,12 +96,10 @@ def update_project(
 @router.delete("/{id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_project(
     id: int,
-    db: Session = Depends(get_db)
 ):
-    repo = ExperienceRepo(db)
+    repo = ExperienceRepo()
 
-    with db.begin():
-        success = repo.delete(id)
+    success = repo.delete(id)
     
     if not success:
         raise HTTPException(

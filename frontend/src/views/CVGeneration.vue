@@ -1,64 +1,144 @@
-<script lang="ts" setup>
+<script setup>
 import { ref } from 'vue'
-import { useCVGeneration } from '../composables/useCVGeneration'
-import CVPreview from '../components/CVPreview.vue'
+import axios from 'axios'
 
+// State
 const jobDescription = ref('')
-const selectedTemplate = ref('basic')
+const matchedProjects = ref([])
+const selectedIds = ref([])
+const generatedCV = ref(null)
+const loading = ref(false)
+const step = ref(1) // 1=input, 2=preview, 3=generated
 
-const { loading, result, error, generateCV } = useCVGeneration()
+// Step 1: Analyze job
+async function analyzeJob() {
+  loading.value = true
+  try {
+    const res = await axios.post('/api/projects/match', {
+      job_description: jobDescription.value,
+      top_n: 5
+    })
+    
+    matchedProjects.value = res.data.matches
+    // Auto-select all by default
+    selectedIds.value = res.data.matches.map(m => m.id)
+    
+    step.value = 2
+  } catch (err) {
+    alert('Matching failed: ' + err.message)
+  } finally {
+    loading.value = false
+  }
+}
 
-async function onGenerate() {
-  if (!jobDescription.value.trim()) return
-  await generateCV(jobDescription.value, selectedTemplate.value)
+// Step 2: Generate PDF
+async function generatePDF() {
+  loading.value = true
+  try {
+    const res = await axios.post('/api/generate', {
+      project_ids: selectedIds.value,
+      template: 'basic'
+    })
+    
+    generatedCV.value = res.data
+    step.value = 3
+  } catch (err) {
+    alert('Generation failed: ' + err.message)
+  } finally {
+    loading.value = false
+  }
+}
+
+// Toggle project selection
+function toggleProject(id) {
+  const idx = selectedIds.value.indexOf(id)
+  if (idx > -1) {
+    selectedIds.value.splice(idx, 1)
+  } else {
+    selectedIds.value.push(id)
+  }
 }
 </script>
 
 <template>
-  <section class="max-w-3xl mx-auto mt-8">
-    <h2 class="text-2xl font-semibold mb-4">Generate Your CV</h2>
+  <!-- Step 1: Input -->
+  <div v-if="step === 1">
+    <h2>Generate CV from Job Description</h2>
+    <textarea 
+      v-model="jobDescription" 
+      placeholder="Paste job description here..."
+      rows="10"
+      class="w-full border p-2"
+    />
+    <button 
+      @click="analyzeJob" 
+      :disabled="!jobDescription || loading"
+      class="mt-2 px-4 py-2 bg-blue-500 text-white"
+    >
+      {{ loading ? 'Analyzing...' : 'Analyze Job' }}
+    </button>
+  </div>
 
-    <label class="block text-gray-700 mb-2">Job Description</label>
-    <textarea
-      v-model="jobDescription"
-      class="w-full border rounded p-3 h-48 resize-none"
-      placeholder="Paste the job description here..."
-    ></textarea>
-
-    <div class="mt-4 flex items-center justify-between">
-      <div>
-        <label class="font-medium">Template:</label>
-        <select v-model="selectedTemplate" class="border rounded p-2 ml-2">
-          <option value="basic">Basic</option>
-        </select>
-      </div>
-
-      <button
-        class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:opacity-50"
-        :disabled="loading"
-        @click="onGenerate"
+  <!-- Step 2: Preview & Edit -->
+  <div v-if="step === 2">
+    <h2>Matched Projects ({{ selectedIds.length }} selected)</h2>
+    
+    <div v-for="proj in matchedProjects" :key="proj.id" class="border p-2 mb-2">
+      <label class="flex items-start gap-2">
+        <input 
+          type="checkbox" 
+          :checked="selectedIds.includes(proj.id)"
+          @change="toggleProject(proj.id)"
+        />
+        <div>
+          <strong>{{ proj.title }}</strong>
+          <span class="text-gray-500 text-sm">(score: {{ proj.score.toFixed(2) }})</span>
+          <p class="text-sm">{{ proj.description.substring(0, 100) }}...</p>
+          <p class="text-xs text-gray-600">{{ proj.technologies.join(', ') }}</p>
+        </div>
+      </label>
+    </div>
+    
+    <div class="mt-4 flex gap-2">
+      <button @click="step = 1" class="px-4 py-2 bg-gray-300">
+        Back
+      </button>
+      <button 
+        @click="generatePDF" 
+        :disabled="selectedIds.length === 0 || loading"
+        class="px-4 py-2 bg-green-500 text-white"
       >
-        {{ loading ? 'Generating...' : 'Generate CV' }}
+        {{ loading ? 'Generating...' : `Generate PDF (${selectedIds.length} projects)` }}
       </button>
     </div>
+  </div>
 
-    <div v-if="error" class="text-red-500 mt-4">{{ error }}</div>
-
-    <div v-if="result" class="mt-8">
-      <h3 class="text-xl font-semibold mb-2">Generated CV</h3>
-
-      <div class="mb-2">
-        <p class="text-gray-700">Created: {{ new Date(result.created_at).toLocaleString() }}</p>
-        <a
-          :href="`/api/generate/file/${result.id}`"
-          class="text-blue-600 underline"
-          download
-        >
-          Download PDF
-        </a>
-      </div>
-
-      <CVPreview :pdf-path="result.pdf_path" />
+  <!-- Step 3: Success -->
+  <div v-if="step === 3 && generatedCV">
+    <h2>✅ CV Generated Successfully!</h2>
+    <p>{{ generatedCV.selected_projects.length }} projects included</p>
+    
+    <div class="mt-4">
+      <a 
+        :href="`/api/generate/file/${generatedCV.id}`" 
+        target="_blank"
+        class="px-4 py-2 bg-blue-500 text-white inline-block"
+      >
+        Download PDF
+      </a>
+      <button @click="step = 1" class="ml-2 px-4 py-2 bg-gray-300">
+        Generate Another
+      </button>
     </div>
-  </section>
+    
+    <!-- Debug info -->
+    <details class="mt-4">
+      <summary>Selected Projects</summary>
+      <ul>
+        <li v-for="p in generatedCV.selected_projects" :key="p.id">
+          {{ p.title }} (score: {{ p.score }})
+        </li>
+      </ul>
+    </details>
+  </div>
 </template>

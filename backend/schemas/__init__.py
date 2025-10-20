@@ -2,7 +2,8 @@ from schemas.project import (
     ProjectCreate,
     ProjectUpdate,
     ProjectResponse,
-    ProjectListResponse
+    ProjectListResponse,
+    ProjectMatchs
 )
 from schemas.experience import (
     ExperienceCreate,
@@ -16,6 +17,7 @@ __all__ = [
     "ProjectUpdate", 
     "ProjectResponse",
     "ProjectListResponse",
+    "ProjectMatchs",
     "ExperienceCreate",
     "ExperienceUpdate",
     "ExperienceResponse",

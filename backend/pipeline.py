@@ -1,5 +1,8 @@
+import json
 from pathlib import Path
 from typing import Any
+from models import Project
+from schemas import ProjectCreate
 from config import settings
 from services import (
     ProfileService,
@@ -30,19 +33,18 @@ def generate_cv(job_description: str, template: str = "basic") -> tuple[Path, li
     for m in matches:
         print(f"\tRank {m['rank']} | Score {m['score']:.3f} | Projeto: {m['project']['title']}")
 
-    projects = [p['project'] for p in matches]
-    formatted = ""
-    for p in projects:
-        formatted += f"\\textbf{{{p['title']}}} \\\\ {p['description']} \\\\[1em]\n"
+    projects = [Project(**p['project']).as_dict() for p in matches]
+    
     context = {
         "full_name": profile.personal.get('full_name'),
         "email": profile.personal.get('email'),
-        "projects": formatted
+        "projects": projects
     }
 
     print("\nA gerar LaTeX...")
     tex_path = latex.save_rendered(template, context)
     print("✅ LaTeX gerado com sucesso!")
+
     print("A compilar PDF...")
     pdf_path = pdf.generate(tex_path)
     print("✅ PDF gerado com sucesso!")

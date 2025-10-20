@@ -1,13 +1,13 @@
-from fastapi import APIRouter, Query, HTTPException, Depends, status
-from sqlalchemy.orm import Session
-from config import get_db
+from fastapi import APIRouter, Query, HTTPException, status
+from services import ProjectMatcherService
 from models import Project
 from repositories import ProjectRepo
 from schemas import (
     ProjectCreate,
     ProjectUpdate,
     ProjectResponse,
-    ProjectListResponse
+    ProjectListResponse,
+    ProjectMatchs
 )
 
 router = APIRouter()
@@ -17,12 +17,10 @@ def get_projects(
     limit: int = Query(10, ge=1, le=100, description="Number of projects to return"),
     offset: int = Query(0, ge=0, description="Offset for pagination"),
     search: str | None = Query(None, description="Search term for title/description"),
-    db: Session = Depends(get_db)
 ) -> ProjectListResponse:
-    repo = ProjectRepo(db)
+    repo = ProjectRepo()
 
-    with db.begin():
-        projects, total = repo.list(limit=limit, offset=offset, search=search)
+    projects, total = repo.list(limit=limit, offset=offset, search=search)
 
     return ProjectListResponse(
         total=total,
@@ -35,12 +33,10 @@ def get_projects(
 @router.get("/{id}", response_model=ProjectResponse)
 def get_project(
     id: int,
-    db: Session = Depends(get_db)
 ) -> ProjectResponse:
-    repo = ProjectRepo(db)
+    repo = ProjectRepo()
 
-    with db.begin():
-        project = repo.get_by_id(id)
+    project = repo.get_by_id(id)
     
     if not project:
         raise HTTPException(
@@ -53,9 +49,8 @@ def get_project(
 @router.post("", response_model=ProjectResponse, status_code=status.HTTP_201_CREATED)
 def create_project(
     payload: ProjectCreate,
-    db: Session = Depends(get_db)
 ) -> ProjectResponse:
-    repo = ProjectRepo(db)
+    repo = ProjectRepo()
 
     project = Project(
         title=payload.title,
@@ -66,19 +61,16 @@ def create_project(
         role=payload.role
     )
 
-    with db.begin():
-        repo.create(project)
+    repo.create(project)
 
-    db.refresh(project)
     return ProjectResponse.model_validate(project)
 
 @router.put("/{id}", response_model=ProjectResponse)
 def update_project(
     id: int,
     payload: ProjectUpdate,
-    db: Session = Depends(get_db)
 ) -> ProjectResponse:
-    repo = ProjectRepo(db)
+    repo = ProjectRepo()
 
     project = Project(
         title=payload.title,
@@ -89,8 +81,7 @@ def update_project(
         role=payload.role
     )
 
-    with db.begin():
-        updated_project = repo.update(id, project)
+    updated_project = repo.update(id, project)
     
     if not updated_project:
         raise HTTPException(
@@ -103,12 +94,10 @@ def update_project(
 @router.delete("/{id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_project(
     id: int,
-    db: Session = Depends(get_db)
 ):
-    repo = ProjectRepo(db)
+    repo = ProjectRepo()
 
-    with db.begin():
-        success = repo.delete(id)
+    success = repo.delete(id)
     
     if not success:
         raise HTTPException(
@@ -117,3 +106,38 @@ def delete_project(
         )
     
     return None
+
+
+@router.post("/match", status_code=status.HTTP_200_OK)
+def match_projects_for_job(
+    payload: ProjectMatchs
+):
+    """
+    Match projects to job description using semantic similarity.
+    Returns ranked list of projects with scores.
+    """
+
+    # job_description: str,
+    # top_n: int = Query(5, ge=1, le=20, description="Number of projects to return")
+
+    matcher = ProjectMatcherService()
+    results = matcher.match_projects(payload.job_description, top_n=payload.top_n)
+    
+    # Transform results para formato API-friendly
+    matches = []
+    for r in results:
+        project = r["project"]
+        matches.append({
+            "id": project.get("id"),
+            "title": project.get("title"),
+            "description": project.get("description"),
+            "technologies": project.get("technologies", []),
+            "score": r["score"],
+            "rank": r["rank"]
+        })
+    
+    return {
+        "job_description": payload.job_description[:100] + "...",
+        "matches": matches,
+        "total_matches": len(matches)
+    }

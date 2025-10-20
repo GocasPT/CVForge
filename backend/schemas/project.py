@@ -35,3 +35,8 @@ class ProjectListResponse(BaseModel):
     offset: int
     limit: int
     projects: List[ProjectResponse]
+
+class ProjectMatchs(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    job_description: str
+    top_n: int = 5

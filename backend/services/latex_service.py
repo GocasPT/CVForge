@@ -20,6 +20,7 @@ def escape_latex(text: str) -> str:
     """
     if text is None:
         return ""
+    
     replacements = {
         "\\": r"\textbackslash{}",
         "&": r"\&",
@@ -32,9 +33,11 @@ def escape_latex(text: str) -> str:
         "~": r"\textasciitilde{}",
         "^": r"\^{}",
     }
+
     s = str(text)
     for k, v in replacements.items():
         s = s.replace(k, v)
+        
     return s
 
 
@@ -62,18 +65,28 @@ class LaTeXService:
         or extend this function to accept richer structures.
         """
         template_str = self.load_template(template_name)
-        # escape values conservatively
-        escaped_context = {
-            k: (v if isinstance(v, str) and v.startswith(r"\latexraw:") else escape_latex(v))
-            for k, v in context.items()
-        }
-        # allow raw LaTeX by prefixing a string with '\latexraw:' (explicit opt-in)
+        # # escape values conservatively
+        # escaped_context = {
+        #     k: (v if isinstance(v, str) and v.startswith(r"\latexraw:") else escape_latex(v))
+        #     for k, v in context.items()
+        # }
+        # # allow raw LaTeX by prefixing a string with '\latexraw:' (explicit opt-in)
+        # safe_context = {
+        #     k: (v[len(r"\latexraw:"):] if isinstance(v, str) and v.startswith(r"\latexraw:") else str(v))
+        #     for k, v in escaped_context.items()
+        # }
+
         safe_context = {
-            k: (v[len(r"\latexraw:"):] if isinstance(v, str) and v.startswith(r"\latexraw:") else str(v))
-            for k, v in escaped_context.items()
+            'full_name': context.get('full_name'),
+            'email': context.get('email'),
+            # 'projects': ''.join(
+            #     f"\\textbf{{{p['title']}}} \\\\ {p['description']} \\\\[1em]\n" for p in context.get('projects')
+            # )
+            'projects': context.get('projects')
         }
+
         template = Template(template_str)
-        return template.safe_substitute(safe_context)
+        return template.safe_substitute(context)
 
     def save_rendered(self, template_name: str, context: Dict[str, Any]) -> Path:
         rendered_tex = self.render(template_name, context)

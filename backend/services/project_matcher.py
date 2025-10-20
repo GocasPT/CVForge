@@ -18,20 +18,15 @@ class ProjectMatcherService(object):
             stmt = select(Project)
             projects = session.scalars(stmt).all()
             
-        return [
-            {
-                "id": p.id,
-                "title": p.title,
-                "description": p.description,
-                "technologies": p.technologies
-            } for p in projects
-        ]
+        return projects
 
     def match_projects(self, job_description: str, top_n: int = 5):
         projects = self._get_all_projects()
         if not projects:
             return []
 
-        index = self.embedding_service.build_index(projects)
+        projects_dict = [p.as_dict() for p in projects]
+
+        index = self.embedding_service.build_index(projects_dict)
         results = self.embedding_service.search(index, job_description, top_n=top_n)
         return results
