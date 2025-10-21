@@ -8,21 +8,21 @@ changelog:
       - wip
 
   categories:
-    - title: "✨ Novas Funcionalidades e Melhores"
+    - title: "✨ New and Better Features"
       labels:
         - feat
         - feature
         - enhancement
-    - title: "🐛 Correções de Bugs"
+    - title: "🐛 Bug Fixes"
       labels:
         - fix
         - bugfix
         - bug
-    - title: "🚨 Mudanças que Quebram (Atenção!)"
+    - title: "🚨 Breaking Changes (Attention!)"
       labels:
         - breaking-change
       
-    - title: "📚 Documentação e Tarefas de Código"
+    - title: "📚 Documentation and Code Tasks"
       labels:
         - docs
         - chore
